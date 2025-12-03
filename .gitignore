@@ -1,1 +1,38 @@
+# IDE
 .idea/
+.vscode/
+*.swp
+*.swo
+
+# Documentation générée
+CLAUDE.md
+PLAN.md
+
+# Backend PHP
+backend/vendor/
+backend/var/
+backend/.env
+backend/.env.local
+backend/.env.*.local
+backend/config/jwt/*.pem
+backend/coverage.xml
+backend/.phpunit.result.cache
+
+# Frontend Node
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+frontend/coverage/
+frontend/storybook-static/
+
+# Docker
+.docker/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
