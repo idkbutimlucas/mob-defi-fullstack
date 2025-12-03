@@ -42,4 +42,8 @@ nginx/ssl/*.pem
 Thumbs.db
 
 # Logs
-*.logbackend/.phpunit.cache/
+*.log
+*storybook.log
+
+# PHPUnit cache
+backend/.phpunit.cache/

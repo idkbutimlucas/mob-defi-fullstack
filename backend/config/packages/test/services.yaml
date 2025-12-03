@@ -1,0 +1,7 @@
+services:
+    # Use InMemory repository for tests
+    App\Analytics\Infrastructure\Persistence\InMemoryRouteRecordRepository:
+        shared: true
+
+    App\Analytics\Domain\Repository\RouteRecordRepositoryInterface:
+        alias: App\Analytics\Infrastructure\Persistence\InMemoryRouteRecordRepository

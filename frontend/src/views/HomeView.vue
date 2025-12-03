@@ -9,7 +9,14 @@ const error = ref<string | null>(null);
 
 const fromStation = ref<string | null>(null);
 const toStation = ref<string | null>(null);
-const analyticCode = ref('');
+const analyticCode = ref<string | null>(null);
+
+const analyticCodes = [
+  { title: 'Passagers', value: 'PASSENGER' },
+  { title: 'Fret', value: 'FREIGHT' },
+  { title: 'Maintenance', value: 'MAINTENANCE' },
+  { title: 'Service', value: 'SERVICE' },
+];
 
 const result = ref<RouteResponse | null>(null);
 
@@ -101,11 +108,15 @@ function getStationName(id: string): string {
 
         <v-row>
           <v-col cols="12">
-            <v-text-field
+            <v-select
               v-model="analyticCode"
+              :items="analyticCodes"
+              item-title="title"
+              item-value="value"
               label="Code analytique"
               prepend-icon="mdi-tag"
-              placeholder="Ex: PASSENGER, FREIGHT, MAINTENANCE"
+              placeholder="Sélectionnez un type de trajet"
+              clearable
             />
           </v-col>
         </v-row>

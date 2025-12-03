@@ -53,3 +53,36 @@ export async function calculateRoute(request: RouteRequest): Promise<RouteRespon
     body: JSON.stringify(request),
   });
 }
+
+export type GroupBy = 'none' | 'day' | 'month' | 'year';
+
+export interface StatsRequest {
+  from?: string;
+  to?: string;
+  groupBy?: GroupBy;
+}
+
+export interface DistanceAggregate {
+  analyticCode: string;
+  totalDistanceKm: number;
+  periodStart?: string;
+  periodEnd?: string;
+  group?: string;
+}
+
+export interface StatsResponse {
+  from: string | null;
+  to: string | null;
+  groupBy: GroupBy;
+  items: DistanceAggregate[];
+}
+
+export async function getStats(request: StatsRequest = {}): Promise<StatsResponse> {
+  const params = new URLSearchParams();
+  if (request.from) params.append('from', request.from);
+  if (request.to) params.append('to', request.to);
+  if (request.groupBy) params.append('groupBy', request.groupBy);
+
+  const query = params.toString();
+  return fetchApi<StatsResponse>(`/stats/distances${query ? `?${query}` : ''}`);
+}

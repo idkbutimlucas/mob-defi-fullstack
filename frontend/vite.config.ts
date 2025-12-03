@@ -17,4 +17,18 @@ export default defineConfig({
       usePolling: true,
     },
   },
+  test: {
+    globals: true,
+    environment: 'happy-dom',
+    setupFiles: ['./src/__tests__/setup.ts'],
+    deps: {
+      inline: ['vuetify'],
+    },
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      include: ['src/**/*.{ts,vue}'],
+      exclude: ['src/main.ts', 'src/vite-env.d.ts', 'src/__tests__/**'],
+    },
+  },
 })
