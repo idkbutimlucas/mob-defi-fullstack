@@ -4,6 +4,10 @@
 *.swp
 *.swo
 
+# Environment
+.env
+.env.local
+
 # Documentation générée
 CLAUDE.md
 PLAN.md
@@ -29,6 +33,9 @@ frontend/storybook-static/
 
 # Docker
 .docker/
+
+# SSL certificates (generated locally)
+nginx/ssl/*.pem
 
 # OS
 .DS_Store
