@@ -120,9 +120,7 @@
                   {{ item.analyticCode }}
                 </v-chip>
               </td>
-              <td class="text-right font-weight-bold">
-                {{ item.totalDistanceKm.toFixed(2) }} km
-              </td>
+              <td class="text-right font-weight-bold">{{ item.totalDistanceKm.toFixed(2) }} km</td>
               <td v-if="groupBy !== 'none'">
                 {{ item.group }}
               </td>

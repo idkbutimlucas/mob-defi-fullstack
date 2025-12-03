@@ -1,62 +1,62 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { getStations, calculateRoute, type Station, type RouteResponse } from '@/api/client';
+  import { ref, onMounted } from 'vue'
+  import { getStations, calculateRoute, type Station, type RouteResponse } from '@/api/client'
 
-const stations = ref<Station[]>([]);
-const loading = ref(false);
-const loadingStations = ref(true);
-const error = ref<string | null>(null);
+  const stations = ref<Station[]>([])
+  const loading = ref(false)
+  const loadingStations = ref(true)
+  const error = ref<string | null>(null)
 
-const fromStation = ref<string | null>(null);
-const toStation = ref<string | null>(null);
-const analyticCode = ref<string | null>(null);
+  const fromStation = ref<string | null>(null)
+  const toStation = ref<string | null>(null)
+  const analyticCode = ref<string | null>(null)
 
-const analyticCodes = [
-  { title: 'Passagers', value: 'PASSENGER' },
-  { title: 'Fret', value: 'FREIGHT' },
-  { title: 'Maintenance', value: 'MAINTENANCE' },
-  { title: 'Service', value: 'SERVICE' },
-];
+  const analyticCodes = [
+    { title: 'Passagers', value: 'PASSENGER' },
+    { title: 'Fret', value: 'FREIGHT' },
+    { title: 'Maintenance', value: 'MAINTENANCE' },
+    { title: 'Service', value: 'SERVICE' },
+  ]
 
-const result = ref<RouteResponse | null>(null);
+  const result = ref<RouteResponse | null>(null)
 
-onMounted(async () => {
-  try {
-    stations.value = await getStations();
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Erreur lors du chargement des stations';
-  } finally {
-    loadingStations.value = false;
+  onMounted(async () => {
+    try {
+      stations.value = await getStations()
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : 'Erreur lors du chargement des stations'
+    } finally {
+      loadingStations.value = false
+    }
+  })
+
+  async function submitForm() {
+    if (!fromStation.value || !toStation.value || !analyticCode.value) {
+      error.value = 'Veuillez remplir tous les champs'
+      return
+    }
+
+    loading.value = true
+    error.value = null
+    result.value = null
+
+    try {
+      result.value = await calculateRoute({
+        fromStationId: fromStation.value,
+        toStationId: toStation.value,
+        analyticCode: analyticCode.value,
+      })
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : 'Erreur lors du calcul du trajet'
+    } finally {
+      loading.value = false
+    }
   }
-});
 
-async function submitForm() {
-  if (!fromStation.value || !toStation.value || !analyticCode.value) {
-    error.value = 'Veuillez remplir tous les champs';
-    return;
+  function getStationName(id: string): string {
+    const station = stations.value.find((s) => s.id === id)
+    return station ? station.name : id
   }
-
-  loading.value = true;
-  error.value = null;
-  result.value = null;
-
-  try {
-    result.value = await calculateRoute({
-      fromStationId: fromStation.value,
-      toStationId: toStation.value,
-      analyticCode: analyticCode.value,
-    });
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Erreur lors du calcul du trajet';
-  } finally {
-    loading.value = false;
-  }
-}
-
-function getStationName(id: string): string {
-  const station = stations.value.find(s => s.id === id);
-  return station ? station.name : id;
-}
 </script>
 
 <template>
@@ -70,7 +70,14 @@ function getStationName(id: string): string {
         Sélectionnez une station de départ et d'arrivée pour calculer la distance.
       </v-alert>
 
-      <v-alert v-if="error" type="error" variant="tonal" class="mb-4" closable @click:close="error = null">
+      <v-alert
+        v-if="error"
+        type="error"
+        variant="tonal"
+        class="mb-4"
+        closable
+        @click:close="error = null"
+      >
         {{ error }}
       </v-alert>
 
@@ -152,14 +159,18 @@ function getStationName(id: string): string {
                     <v-icon>mdi-map-marker</v-icon>
                   </template>
                   <v-list-item-title>Départ</v-list-item-title>
-                  <v-list-item-subtitle>{{ getStationName(result.fromStationId) }}</v-list-item-subtitle>
+                  <v-list-item-subtitle>{{
+                    getStationName(result.fromStationId)
+                  }}</v-list-item-subtitle>
                 </v-list-item>
                 <v-list-item>
                   <template #prepend>
                     <v-icon>mdi-map-marker-check</v-icon>
                   </template>
                   <v-list-item-title>Arrivée</v-list-item-title>
-                  <v-list-item-subtitle>{{ getStationName(result.toStationId) }}</v-list-item-subtitle>
+                  <v-list-item-subtitle>{{
+                    getStationName(result.toStationId)
+                  }}</v-list-item-subtitle>
                 </v-list-item>
                 <v-list-item>
                   <template #prepend>
@@ -186,7 +197,13 @@ function getStationName(id: string): string {
                   v-for="(stationId, index) in result.path"
                   :key="index"
                   size="small"
-                  :color="index === 0 ? 'primary' : index === result.path.length - 1 ? 'success' : 'default'"
+                  :color="
+                    index === 0
+                      ? 'primary'
+                      : index === result.path.length - 1
+                        ? 'success'
+                        : 'default'
+                  "
                 >
                   {{ getStationName(stationId) }}
                 </v-chip>
