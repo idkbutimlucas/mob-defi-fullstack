@@ -91,6 +91,9 @@ jobs:
       - name: Build and start services
         run: docker compose up -d --build
 
+      - name: Fix backend var permissions
+        run: docker compose exec -T -u root backend chown -R app:app /app/var
+
       - name: Wait for database
         run: |
           echo "Waiting for database to be ready..."
