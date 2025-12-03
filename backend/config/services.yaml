@@ -27,8 +27,7 @@ services:
         alias: App\Routing\Domain\Service\DijkstraPathFinder
 
     # Analytics Services
-    App\Analytics\Infrastructure\Persistence\InMemoryRouteRecordRepository:
-        shared: true
+    App\Analytics\Infrastructure\Persistence\DoctrineRouteRecordRepository: ~
 
     App\Analytics\Domain\Repository\RouteRecordRepositoryInterface:
-        alias: App\Analytics\Infrastructure\Persistence\InMemoryRouteRecordRepository
+        alias: App\Analytics\Infrastructure\Persistence\DoctrineRouteRecordRepository

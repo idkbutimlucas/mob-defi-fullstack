@@ -7,16 +7,29 @@ namespace App\Analytics\Domain\Model;
 use App\Shared\Domain\AnalyticCode;
 use App\Shared\Domain\Distance;
 use DateTimeImmutable;
+use Doctrine\ORM\Mapping as ORM;
 
 /**
  * Entity représentant un enregistrement de trajet pour les statistiques.
  * Utilisé pour agréger les distances par code analytique.
  */
+#[ORM\Entity]
+#[ORM\Table(name: 'route_records')]
+#[ORM\Index(columns: ['created_at'], name: 'idx_route_records_created_at')]
+#[ORM\Index(columns: ['analytic_code'], name: 'idx_route_records_analytic_code')]
 class RouteRecord
 {
+    #[ORM\Id]
+    #[ORM\Column(type: 'string', length: 36)]
     private string $id;
+
+    #[ORM\Column(name: 'analytic_code', type: 'string', length: 50)]
     private string $analyticCode;
+
+    #[ORM\Column(name: 'distance_km', type: 'float')]
     private float $distanceKm;
+
+    #[ORM\Column(name: 'created_at', type: 'datetime_immutable')]
     private DateTimeImmutable $createdAt;
 
     private function __construct(

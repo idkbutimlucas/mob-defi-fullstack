@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { RouterView } from 'vue-router'
+  import { ref } from 'vue'
+  import { RouterView } from 'vue-router'
+
+  const drawer = ref(false)
 </script>
 
 <template>
@@ -12,16 +15,8 @@ import { RouterView } from 'vue-router'
 
     <v-navigation-drawer v-model="drawer" temporary>
       <v-list nav>
-        <v-list-item
-          prepend-icon="mdi-train"
-          title="Calculer un trajet"
-          to="/"
-        />
-        <v-list-item
-          prepend-icon="mdi-chart-bar"
-          title="Statistiques"
-          to="/stats"
-        />
+        <v-list-item prepend-icon="mdi-train" title="Calculer un trajet" to="/" />
+        <v-list-item prepend-icon="mdi-chart-bar" title="Statistiques" to="/stats" />
       </v-list>
     </v-navigation-drawer>
 
@@ -32,20 +27,7 @@ import { RouterView } from 'vue-router'
     </v-main>
 
     <v-footer app>
-      <v-col class="text-center" cols="12">
-        MOB - Montreux Oberland Bernois
-      </v-col>
+      <v-col class="text-center" cols="12"> MOB - Montreux Oberland Bernois </v-col>
     </v-footer>
   </v-app>
 </template>
-
-<script lang="ts">
-import { ref } from 'vue'
-
-export default {
-  setup() {
-    const drawer = ref(false)
-    return { drawer }
-  },
-}
-</script>
