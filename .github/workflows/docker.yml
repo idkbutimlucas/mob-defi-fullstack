@@ -54,8 +54,8 @@ jobs:
         run: |
           mkdir -p nginx/ssl
           openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-            -keyout nginx/ssl/privkey.pem \
-            -out nginx/ssl/fullchain.pem \
+            -keyout nginx/ssl/key.pem \
+            -out nginx/ssl/cert.pem \
             -subj "/CN=localhost"
 
       - name: Create JWT keys
@@ -64,8 +64,50 @@ jobs:
           openssl genpkey -algorithm RSA -out backend/config/jwt/private.pem -pkeyopt rsa_keygen_bits:4096
           openssl rsa -pubout -in backend/config/jwt/private.pem -out backend/config/jwt/public.pem
 
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo, pdo_pgsql, intl, zip
+
+      - name: Create backend .env file
+        run: |
+          cat > backend/.env << 'EOF'
+          APP_ENV=dev
+          APP_DEBUG=1
+          APP_SECRET=docker_ci_secret
+          JWT_SECRET_KEY=%kernel.project_dir%/config/jwt/private.pem
+          JWT_PUBLIC_KEY=%kernel.project_dir%/config/jwt/public.pem
+          JWT_PASSPHRASE=test_passphrase
+          API_USER_PASSWORD=test_password
+          DATABASE_URL=postgresql://app:secret@db:5432/trainrouting?serverVersion=16
+          CORS_ALLOW_ORIGIN='^https?://localhost(:[0-9]+)?$'
+          EOF
+
+      - name: Install backend dependencies
+        run: composer install --prefer-dist --no-progress
+        working-directory: backend
+
       - name: Build and start services
         run: docker compose up -d --build
+
+      - name: Fix backend var permissions
+        run: docker compose exec -T -u root backend chown -R app:app /app/var
+
+      - name: Wait for database
+        run: |
+          echo "Waiting for database to be ready..."
+          for i in {1..30}; do
+            if docker compose exec -T db pg_isready -U app -d trainrouting; then
+              echo "Database is ready"
+              break
+            fi
+            echo "Waiting... ($i/30)"
+            sleep 2
+          done
+
+      - name: Create database schema
+        run: docker compose exec -T backend php bin/console doctrine:schema:create --env=dev
 
       - name: Wait for services
         run: |

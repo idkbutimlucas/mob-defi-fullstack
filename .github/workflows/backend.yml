@@ -55,11 +55,35 @@ jobs:
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress
 
+      - name: Create .env file
+        run: |
+          cat > .env << 'EOF'
+          APP_ENV=test
+          APP_DEBUG=0
+          APP_SECRET=test_secret_key_for_ci
+          JWT_SECRET_KEY=%kernel.project_dir%/config/jwt/private.pem
+          JWT_PUBLIC_KEY=%kernel.project_dir%/config/jwt/public.pem
+          JWT_PASSPHRASE=test_passphrase
+          API_USER_PASSWORD=test_password
+          CORS_ALLOW_ORIGIN='^https?://localhost(:[0-9]+)?$'
+          EOF
+
+      - name: Create JWT keys
+        run: |
+          mkdir -p config/jwt
+          openssl genpkey -algorithm RSA -out config/jwt/private.pem -pkeyopt rsa_keygen_bits:2048
+          openssl rsa -pubout -in config/jwt/private.pem -out config/jwt/public.pem
+
       - name: Run PHPStan
         run: composer analyse
 
       - name: Run PHPCS
         run: composer lint
+
+      - name: Create database schema
+        run: php bin/console doctrine:schema:create --env=test
+        env:
+          DATABASE_URL: postgresql://app:secret@localhost:5432/trainrouting_test?serverVersion=16
 
       - name: Run tests
         run: composer test
