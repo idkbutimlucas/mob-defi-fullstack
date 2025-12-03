@@ -138,5 +138,104 @@ Tu es libre d’utiliser les outils qui te semblent les plus adaptés pour réal
 
 ---
 ## 🚀 À toi de jouer !
-Nous avons hâte de découvrir ta solution et de voir comment tu abordes ce défi.  
+Nous avons hâte de découvrir ta solution et de voir comment tu abordes ce défi.
 Bonne chance, et surtout amuse-toi en codant !
+
+---
+
+# 📦 Solution - Instructions de déploiement
+
+## Prérequis
+
+- Docker Engine 25+
+- Docker Compose v2+
+- OpenSSL (pour générer les certificats)
+
+## Déploiement rapide
+
+```bash
+# 1. Cloner le repository
+git clone https://github.com/idkbutimlucas/mob-defi-fullstack.git
+cd mob-defi-fullstack
+
+# 2. Copier le fichier d'environnement
+cp .env.example .env
+
+# 3. Générer les certificats SSL (auto-signés pour dev)
+mkdir -p nginx/ssl
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout nginx/ssl/key.pem \
+  -out nginx/ssl/cert.pem \
+  -subj "/CN=localhost"
+
+# 4. Générer les clés JWT
+mkdir -p backend/config/jwt
+openssl genpkey -algorithm RSA -out backend/config/jwt/private.pem -pkeyopt rsa_keygen_bits:4096
+openssl rsa -pubout -in backend/config/jwt/private.pem -out backend/config/jwt/public.pem
+
+# 5. Lancer l'application
+docker compose up -d
+
+# 6. Créer le schéma de base de données
+docker compose exec backend php bin/console doctrine:schema:create
+
+# 7. (Optionnel) Lancer Storybook
+docker compose --profile dev up -d storybook
+```
+
+L'application est accessible sur :
+- **Frontend** : https://localhost
+- **API** : https://localhost/api/v1
+- **Storybook** : http://localhost:6006
+
+## Authentification API
+
+L'API utilise JWT. Un utilisateur par défaut est configuré :
+
+```bash
+# Obtenir un token JWT
+curl -sk -X POST https://localhost/api/v1/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"api","password":"'"$API_USER_PASSWORD"'"}'
+```
+
+## Endpoints API
+
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| GET | `/api/v1/stations` | Liste des stations (public) |
+| POST | `/api/v1/routes` | Calculer un trajet (auth requise) |
+| GET | `/api/v1/stats/distances` | Statistiques agrégées (auth requise) |
+
+## Structure du projet
+
+```
+mob-defi-fullstack/
+├── backend/          # API PHP 8.4 / Symfony 7
+├── frontend/         # Vue.js 3 / Vuetify 3 / TypeScript
+├── nginx/            # Reverse proxy HTTPS
+├── data/             # Données stations/distances
+├── .github/workflows # CI/CD GitHub Actions
+├── openapi.yml       # Spécification API
+└── docker-compose.yml
+```
+
+## Tests
+
+```bash
+# Tests backend (PHPUnit)
+docker compose exec backend composer test
+
+# Tests frontend (Vitest)
+docker compose exec frontend npm run test
+
+# Linting
+docker compose exec backend composer lint
+docker compose exec frontend npm run lint
+```
+
+## Documentation
+
+- [ARCHITECTURE.md](./ARCHITECTURE.md) - Choix techniques et architecture
+- [CHANGELOG.md](./CHANGELOG.md) - Historique des modifications
+- [openapi.yml](./openapi.yml) - Spécification API OpenAPI 3.1
