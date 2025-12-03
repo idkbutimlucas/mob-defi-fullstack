@@ -61,6 +61,11 @@ jobs:
       - name: Run PHPCS
         run: composer lint
 
+      - name: Create database schema
+        run: php bin/console doctrine:schema:create --env=test
+        env:
+          DATABASE_URL: postgresql://app:secret@localhost:5432/trainrouting_test?serverVersion=16
+
       - name: Run tests
         run: composer test
         env:

@@ -67,6 +67,21 @@ jobs:
       - name: Build and start services
         run: docker compose up -d --build
 
+      - name: Wait for database
+        run: |
+          echo "Waiting for database to be ready..."
+          for i in {1..30}; do
+            if docker compose exec -T db pg_isready -U app -d trainrouting; then
+              echo "Database is ready"
+              break
+            fi
+            echo "Waiting... ($i/30)"
+            sleep 2
+          done
+
+      - name: Create database schema
+        run: docker compose exec -T backend php bin/console doctrine:schema:create --env=dev
+
       - name: Wait for services
         run: |
           echo "Waiting for services to be ready..."
