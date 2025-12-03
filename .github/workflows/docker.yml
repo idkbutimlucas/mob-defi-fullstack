@@ -79,6 +79,9 @@ jobs:
             sleep 2
           done
 
+      - name: Install backend dependencies
+        run: docker compose exec -T backend composer install --no-interaction
+
       - name: Create database schema
         run: docker compose exec -T backend php bin/console doctrine:schema:create --env=dev
 
