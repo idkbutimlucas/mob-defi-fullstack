@@ -11,23 +11,68 @@ import '@mdi/font/css/materialdesignicons.css'
 import App from './App.vue'
 import router from './router'
 
+// Theme MOB - Montreux Oberland Bernois
+// Inspiré des chemins de fer suisses et du GoldenPass
 const vuetify = createVuetify({
   components,
   directives,
   theme: {
-    defaultTheme: 'light',
+    defaultTheme: 'mobTheme',
     themes: {
-      light: {
+      mobTheme: {
+        dark: false,
         colors: {
-          primary: '#1976D2',
-          secondary: '#424242',
-          accent: '#82B1FF',
-          error: '#FF5252',
-          info: '#2196F3',
-          success: '#4CAF50',
-          warning: '#FFC107',
+          // Couleurs principales MOB
+          primary: '#C8102E', // Rouge suisse ferroviaire
+          secondary: '#1A1A2E', // Bleu nuit profond
+          accent: '#D4AF37', // Or GoldenPass
+          background: '#FAFAFA',
+          surface: '#FFFFFF',
+
+          // États
+          error: '#D32F2F',
+          info: '#0288D1',
+          success: '#2E7D32',
+          warning: '#F57C00',
+
+          // Personnalisés
+          'on-primary': '#FFFFFF',
+          'on-secondary': '#FFFFFF',
+          'rail-dark': '#2C3E50',
+          'rail-light': '#ECF0F1',
         },
       },
+      dark: {
+        dark: true,
+        colors: {
+          primary: '#E53935',
+          secondary: '#1A1A2E',
+          accent: '#FFD700',
+          background: '#121212',
+          surface: '#1E1E1E',
+        },
+      },
+    },
+  },
+  defaults: {
+    VCard: {
+      elevation: 2,
+      rounded: 'lg',
+    },
+    VBtn: {
+      rounded: 'lg',
+    },
+    VTextField: {
+      variant: 'outlined',
+      density: 'comfortable',
+    },
+    VSelect: {
+      variant: 'outlined',
+      density: 'comfortable',
+    },
+    VAutocomplete: {
+      variant: 'outlined',
+      density: 'comfortable',
     },
   },
 })
