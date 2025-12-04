@@ -1,340 +1,370 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { getStats, type StatsResponse, type GroupBy } from '@/api/client'
-import { Bar, Doughnut } from 'vue-chartjs'
-import {
-  Chart as ChartJS,
-  Title,
-  Tooltip,
-  Legend,
-  BarElement,
-  CategoryScale,
-  LinearScale,
-  ArcElement,
-  type TooltipItem,
-} from 'chart.js'
+  import { ref, onMounted, computed } from 'vue'
+  import { getStats, type StatsResponse, type GroupBy } from '@/api/client'
+  import { Bar, Doughnut } from 'vue-chartjs'
+  import {
+    Chart as ChartJS,
+    Title,
+    Tooltip,
+    Legend,
+    BarElement,
+    CategoryScale,
+    LinearScale,
+    ArcElement,
+    type TooltipItem,
+  } from 'chart.js'
 
-ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, ArcElement)
+  ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, ArcElement)
 
-const fromDate = ref('')
-const toDate = ref('')
-const groupBy = ref<GroupBy>('none')
-const stats = ref<StatsResponse | null>(null)
-const loading = ref(false)
-const error = ref<string | null>(null)
-const activeTab = ref('chart')
+  const fromDate = ref('')
+  const toDate = ref('')
+  const groupBy = ref<GroupBy>('none')
+  const stats = ref<StatsResponse | null>(null)
+  const loading = ref(false)
+  const error = ref<string | null>(null)
+  const activeTab = ref('chart')
 
-const groupByOptions = [
-  { title: 'Aucun', value: 'none', icon: 'mdi-view-list' },
-  { title: 'Par jour', value: 'day', icon: 'mdi-calendar-today' },
-  { title: 'Par mois', value: 'month', icon: 'mdi-calendar-month' },
-  { title: 'Par annee', value: 'year', icon: 'mdi-calendar' },
-]
+  const groupByOptions = [
+    { title: 'Aucun', value: 'none' },
+    { title: 'Par jour', value: 'day' },
+    { title: 'Par mois', value: 'month' },
+    { title: 'Par annee', value: 'year' },
+  ]
 
-const chartColors = {
-  PASSENGER: { bg: 'rgba(200, 16, 46, 0.8)', border: '#C8102E' },
-  FREIGHT: { bg: 'rgba(245, 124, 0, 0.8)', border: '#F57C00' },
-  MAINTENANCE: { bg: 'rgba(2, 136, 209, 0.8)', border: '#0288D1' },
-  SERVICE: { bg: 'rgba(26, 26, 46, 0.8)', border: '#1A1A2E' },
-}
-
-const barChartData = computed(() => {
-  if (!stats.value || stats.value.items.length === 0) {
-    return { labels: [], datasets: [] }
+  const chartColors = {
+    PASSENGER: { bg: '#e6007e', border: '#e6007e' },
+    FREIGHT: { bg: '#F57C00', border: '#F57C00' },
+    MAINTENANCE: { bg: '#0288D1', border: '#0288D1' },
+    SERVICE: { bg: '#001f78', border: '#001f78' },
   }
 
-  const labels = stats.value.items.map((item) =>
-    item.group ? `${item.analyticCode} (${item.group})` : item.analyticCode
-  )
+  const barChartData = computed(() => {
+    if (!stats.value || stats.value.items.length === 0) {
+      return { labels: [], datasets: [] }
+    }
 
-  const colors = stats.value.items.map((item) => {
-    const colorKey = item.analyticCode as keyof typeof chartColors
-    return chartColors[colorKey] || { bg: 'rgba(158, 158, 158, 0.8)', border: '#9E9E9E' }
+    const labels = stats.value.items.map((item) =>
+      item.group ? `${item.analyticCode} (${item.group})` : item.analyticCode
+    )
+
+    const colors = stats.value.items.map((item) => {
+      const colorKey = item.analyticCode as keyof typeof chartColors
+      return chartColors[colorKey] || { bg: '#9E9E9E', border: '#9E9E9E' }
+    })
+
+    return {
+      labels,
+      datasets: [
+        {
+          label: 'Distance totale (km)',
+          data: stats.value.items.map((item) => item.totalDistanceKm),
+          backgroundColor: colors.map((c) => c.bg),
+          borderColor: colors.map((c) => c.border),
+          borderWidth: 0,
+          borderRadius: 0,
+        },
+      ],
+    }
   })
 
-  return {
-    labels,
-    datasets: [
-      {
-        label: 'Distance totale (km)',
-        data: stats.value.items.map((item) => item.totalDistanceKm),
-        backgroundColor: colors.map((c) => c.bg),
-        borderColor: colors.map((c) => c.border),
-        borderWidth: 2,
-        borderRadius: 8,
+  const doughnutChartData = computed(() => {
+    if (!stats.value || stats.value.items.length === 0) {
+      return { labels: [], datasets: [] }
+    }
+
+    const aggregated = stats.value.items.reduce(
+      (acc, item) => {
+        if (!acc[item.analyticCode]) {
+          acc[item.analyticCode] = 0
+        }
+        acc[item.analyticCode] += item.totalDistanceKm
+        return acc
       },
-    ],
-  }
-})
+      {} as Record<string, number>
+    )
 
-const doughnutChartData = computed(() => {
-  if (!stats.value || stats.value.items.length === 0) {
-    return { labels: [], datasets: [] }
-  }
+    const labels = Object.keys(aggregated)
+    const data = Object.values(aggregated)
 
-  // Aggregate by analytic code
-  const aggregated = stats.value.items.reduce(
-    (acc, item) => {
-      if (!acc[item.analyticCode]) {
-        acc[item.analyticCode] = 0
-      }
-      acc[item.analyticCode] += item.totalDistanceKm
-      return acc
-    },
-    {} as Record<string, number>
-  )
+    const colors = labels.map((label) => {
+      const colorKey = label as keyof typeof chartColors
+      return chartColors[colorKey] || { bg: '#9E9E9E', border: '#9E9E9E' }
+    })
 
-  const labels = Object.keys(aggregated)
-  const data = Object.values(aggregated)
-
-  const colors = labels.map((label) => {
-    const colorKey = label as keyof typeof chartColors
-    return chartColors[colorKey] || { bg: 'rgba(158, 158, 158, 0.8)', border: '#9E9E9E' }
+    return {
+      labels,
+      datasets: [
+        {
+          data,
+          backgroundColor: colors.map((c) => c.bg),
+          borderColor: '#fff',
+          borderWidth: 3,
+        },
+      ],
+    }
   })
 
-  return {
-    labels,
-    datasets: [
-      {
-        data,
-        backgroundColor: colors.map((c) => c.bg),
-        borderColor: colors.map((c) => c.border),
-        borderWidth: 2,
+  const barChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false,
       },
-    ],
-  }
-})
-
-const barChartOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: {
-      display: false,
-    },
-    tooltip: {
-      callbacks: {
-        label: (context: TooltipItem<'bar'>) => `${(context.parsed.y ?? 0).toFixed(2)} km`,
-      },
-    },
-  },
-  scales: {
-    y: {
-      beginAtZero: true,
-      title: {
-        display: true,
-        text: 'Distance (km)',
-      },
-    },
-  },
-}
-
-const doughnutChartOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: {
-      position: 'bottom' as const,
-    },
-    tooltip: {
-      callbacks: {
-        label: (context: TooltipItem<'doughnut'>) => {
-          const total = (context.dataset.data as number[]).reduce((a, b) => a + b, 0)
-          const percentage = ((context.parsed / total) * 100).toFixed(1)
-          return `${context.label}: ${context.parsed.toFixed(2)} km (${percentage}%)`
+      tooltip: {
+        callbacks: {
+          label: (context: TooltipItem<'bar'>) => `${(context.parsed.y ?? 0).toFixed(2)} km`,
         },
       },
     },
-  },
-}
-
-const totalDistance = computed(() => {
-  if (!stats.value) return 0
-  return stats.value.items.reduce((sum, item) => sum + item.totalDistanceKm, 0)
-})
-
-const totalRecords = computed(() => {
-  if (!stats.value) return 0
-  return stats.value.items.length
-})
-
-async function fetchStats() {
-  loading.value = true
-  error.value = null
-
-  try {
-    stats.value = await getStats({
-      from: fromDate.value || undefined,
-      to: toDate.value || undefined,
-      groupBy: groupBy.value,
-    })
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Erreur inconnue'
-  } finally {
-    loading.value = false
+    scales: {
+      y: {
+        beginAtZero: true,
+        grid: {
+          color: 'rgba(0, 0, 0, 0.05)',
+        },
+        title: {
+          display: true,
+          text: 'Distance (km)',
+          color: '#666',
+        },
+      },
+      x: {
+        grid: {
+          display: false,
+        },
+      },
+    },
   }
-}
 
-async function handleSubmit() {
-  await fetchStats()
-}
+  const doughnutChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom' as const,
+        labels: {
+          padding: 20,
+          usePointStyle: true,
+        },
+      },
+      tooltip: {
+        callbacks: {
+          label: (context: TooltipItem<'doughnut'>) => {
+            const total = (context.dataset.data as number[]).reduce((a, b) => a + b, 0)
+            const percentage = ((context.parsed / total) * 100).toFixed(1)
+            return `${context.label}: ${context.parsed.toFixed(2)} km (${percentage}%)`
+          },
+        },
+      },
+    },
+  }
 
-function resetFilters() {
-  fromDate.value = ''
-  toDate.value = ''
-  groupBy.value = 'none'
-  fetchStats()
-}
+  const totalDistance = computed(() => {
+    if (!stats.value) return 0
+    return stats.value.items.reduce((sum, item) => sum + item.totalDistanceKm, 0)
+  })
 
-onMounted(() => {
-  fetchStats()
-})
+  const totalRecords = computed(() => {
+    if (!stats.value) return 0
+    return stats.value.items.length
+  })
+
+  const uniqueCodes = computed(() => {
+    if (!stats.value) return 0
+    return new Set(stats.value.items.map((i) => i.analyticCode)).size
+  })
+
+  async function fetchStats() {
+    loading.value = true
+    error.value = null
+
+    try {
+      stats.value = await getStats({
+        from: fromDate.value || undefined,
+        to: toDate.value || undefined,
+        groupBy: groupBy.value,
+      })
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : 'Erreur inconnue'
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function handleSubmit() {
+    await fetchStats()
+  }
+
+  function resetFilters() {
+    fromDate.value = ''
+    toDate.value = ''
+    groupBy.value = 'none'
+    fetchStats()
+  }
+
+  function getCodeColor(code: string): string {
+    const colors: Record<string, string> = {
+      PASSENGER: 'accent',
+      FREIGHT: 'warning',
+      MAINTENANCE: 'info',
+      SERVICE: 'secondary',
+    }
+    return colors[code] || 'grey'
+  }
+
+  function getCodeIcon(code: string): string {
+    const icons: Record<string, string> = {
+      PASSENGER: 'mdi-account-group',
+      FREIGHT: 'mdi-package-variant',
+      MAINTENANCE: 'mdi-wrench',
+      SERVICE: 'mdi-cog',
+    }
+    return icons[code] || 'mdi-help'
+  }
+
+  onMounted(() => {
+    fetchStats()
+  })
 </script>
 
 <template>
   <div>
-    <!-- Hero Section -->
-    <v-card class="mb-6 overflow-hidden" color="secondary" variant="flat">
-      <v-card-text class="pa-8 text-center text-white">
-        <v-icon size="64" class="mb-4" style="opacity: 0.9">mdi-chart-areaspline</v-icon>
-        <h1 class="text-h4 font-weight-bold mb-2">Statistiques</h1>
-        <p class="text-body-1" style="opacity: 0.9">
-          Analysez les distances parcourues par code analytique
-        </p>
-      </v-card-text>
-    </v-card>
+    <!-- Titre de page -->
+    <div class="mb-8">
+      <h1 class="text-h4 font-weight-bold mb-2">Statistiques</h1>
+      <p class="text-body-1 text-medium-emphasis">
+        Analysez les distances parcourues par code analytique
+      </p>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid mb-6">
+      <v-card class="kpi-card">
+        <v-card-text class="pa-5">
+          <div class="d-flex align-center">
+            <div class="kpi-icon bg-accent">
+              <v-icon color="white" size="24">mdi-map-marker-distance</v-icon>
+            </div>
+            <div class="ml-4">
+              <div class="text-caption text-medium-emphasis">Distance totale</div>
+              <div class="text-h5 font-weight-bold">{{ totalDistance.toFixed(2) }} km</div>
+            </div>
+          </div>
+        </v-card-text>
+      </v-card>
+
+      <v-card class="kpi-card">
+        <v-card-text class="pa-5">
+          <div class="d-flex align-center">
+            <div class="kpi-icon bg-primary">
+              <v-icon color="white" size="24">mdi-counter</v-icon>
+            </div>
+            <div class="ml-4">
+              <div class="text-caption text-medium-emphasis">Enregistrements</div>
+              <div class="text-h5 font-weight-bold">{{ totalRecords }}</div>
+            </div>
+          </div>
+        </v-card-text>
+      </v-card>
+
+      <v-card class="kpi-card">
+        <v-card-text class="pa-5">
+          <div class="d-flex align-center">
+            <div class="kpi-icon bg-success">
+              <v-icon color="white" size="24">mdi-tag-multiple</v-icon>
+            </div>
+            <div class="ml-4">
+              <div class="text-caption text-medium-emphasis">Codes analytiques</div>
+              <div class="text-h5 font-weight-bold">{{ uniqueCodes }}</div>
+            </div>
+          </div>
+        </v-card-text>
+      </v-card>
+    </div>
 
     <!-- Filtres -->
-    <v-card class="mb-6">
-      <v-card-text class="pa-6">
+    <v-card class="mb-6 card-elevated">
+      <v-card-text class="pa-5">
         <div class="d-flex align-center mb-4">
-          <v-icon class="mr-2" color="primary">mdi-filter</v-icon>
-          <span class="text-h6">Filtres</span>
+          <v-icon class="mr-2" size="small">mdi-filter-variant</v-icon>
+          <span class="text-subtitle-2 font-weight-medium">Filtres</span>
         </div>
 
         <form @submit.prevent="handleSubmit">
-          <v-row>
-            <v-col cols="12" md="3">
+          <v-row align="end">
+            <v-col cols="12" sm="6" md="3">
+              <label class="field-label">Date de debut</label>
               <v-text-field
                 v-model="fromDate"
-                label="Date de debut"
                 type="date"
-                prepend-inner-icon="mdi-calendar-start"
                 clearable
                 hide-details
+                density="compact"
               />
             </v-col>
-            <v-col cols="12" md="3">
-              <v-text-field
-                v-model="toDate"
-                label="Date de fin"
-                type="date"
-                prepend-inner-icon="mdi-calendar-end"
-                clearable
-                hide-details
-              />
+            <v-col cols="12" sm="6" md="3">
+              <label class="field-label">Date de fin</label>
+              <v-text-field v-model="toDate" type="date" clearable hide-details density="compact" />
             </v-col>
-            <v-col cols="12" md="3">
+            <v-col cols="12" sm="6" md="3">
+              <label class="field-label">Grouper par</label>
               <v-select
                 v-model="groupBy"
-                label="Grouper par"
                 :items="groupByOptions"
                 item-title="title"
                 item-value="value"
-                prepend-inner-icon="mdi-group"
                 hide-details
+                density="compact"
               />
             </v-col>
-            <v-col cols="12" md="3" class="d-flex align-center gap-2">
-              <v-btn type="submit" color="primary" :loading="loading" class="flex-grow-1">
-                <v-icon start>mdi-magnify</v-icon>
-                Appliquer
-              </v-btn>
-              <v-btn variant="outlined" @click="resetFilters" :disabled="loading">
-                <v-icon>mdi-refresh</v-icon>
-              </v-btn>
+            <v-col cols="12" sm="6" md="3">
+              <div class="d-flex gap-2">
+                <v-btn type="submit" color="accent" :loading="loading" class="flex-grow-1">
+                  Appliquer
+                </v-btn>
+                <v-btn variant="outlined" @click="resetFilters" :disabled="loading">
+                  <v-icon>mdi-refresh</v-icon>
+                </v-btn>
+              </div>
             </v-col>
           </v-row>
         </form>
       </v-card-text>
     </v-card>
 
-    <!-- KPIs -->
-    <v-row class="mb-6">
-      <v-col cols="12" md="4">
-        <v-card class="h-100">
-          <v-card-text class="d-flex align-center pa-6">
-            <v-avatar color="primary" size="56" class="mr-4">
-              <v-icon color="white" size="28">mdi-map-marker-distance</v-icon>
-            </v-avatar>
-            <div>
-              <div class="text-caption text-medium-emphasis">Distance totale</div>
-              <div class="text-h4 font-weight-bold">{{ totalDistance.toFixed(2) }}</div>
-              <div class="text-caption text-medium-emphasis">kilometres</div>
-            </div>
-          </v-card-text>
-        </v-card>
-      </v-col>
-      <v-col cols="12" md="4">
-        <v-card class="h-100">
-          <v-card-text class="d-flex align-center pa-6">
-            <v-avatar color="accent" size="56" class="mr-4">
-              <v-icon color="white" size="28">mdi-counter</v-icon>
-            </v-avatar>
-            <div>
-              <div class="text-caption text-medium-emphasis">Nombre d'entrees</div>
-              <div class="text-h4 font-weight-bold">{{ totalRecords }}</div>
-              <div class="text-caption text-medium-emphasis">enregistrements</div>
-            </div>
-          </v-card-text>
-        </v-card>
-      </v-col>
-      <v-col cols="12" md="4">
-        <v-card class="h-100">
-          <v-card-text class="d-flex align-center pa-6">
-            <v-avatar color="success" size="56" class="mr-4">
-              <v-icon color="white" size="28">mdi-chart-pie</v-icon>
-            </v-avatar>
-            <div>
-              <div class="text-caption text-medium-emphasis">Codes analytiques</div>
-              <div class="text-h4 font-weight-bold">
-                {{ new Set(stats?.items.map((i) => i.analyticCode) || []).size }}
-              </div>
-              <div class="text-caption text-medium-emphasis">categories</div>
-            </div>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
-
     <!-- Alertes -->
-    <v-alert v-if="error" type="error" variant="tonal" class="mb-6" closable @click:close="error = null">
+    <v-alert
+      v-if="error"
+      type="error"
+      variant="tonal"
+      class="mb-6"
+      closable
+      @click:close="error = null"
+    >
       {{ error }}
     </v-alert>
 
-    <v-progress-linear v-if="loading" indeterminate color="primary" class="mb-6" />
+    <v-progress-linear v-if="loading" indeterminate color="accent" class="mb-6" />
 
     <!-- Contenu principal -->
     <template v-if="stats && !loading">
       <v-alert v-if="stats.items.length === 0" type="info" variant="tonal" class="mb-6">
-        <template #prepend>
-          <v-icon>mdi-information</v-icon>
-        </template>
-        Aucune donnee pour les filtres selectionnes. Essayez de calculer quelques trajets d'abord.
+        Aucune donnee pour les filtres selectionnes. Calculez quelques trajets d'abord.
       </v-alert>
 
-      <v-card v-else>
-        <v-tabs v-model="activeTab" color="primary" class="border-b">
+      <v-card v-else class="card-elevated">
+        <v-tabs v-model="activeTab" color="accent" class="tabs-border">
           <v-tab value="chart">
-            <v-icon start>mdi-chart-bar</v-icon>
-            Graphique en barres
+            <v-icon start size="small">mdi-chart-bar</v-icon>
+            Barres
           </v-tab>
           <v-tab value="doughnut">
-            <v-icon start>mdi-chart-donut</v-icon>
+            <v-icon start size="small">mdi-chart-donut</v-icon>
             Repartition
           </v-tab>
           <v-tab value="table">
-            <v-icon start>mdi-table</v-icon>
+            <v-icon start size="small">mdi-table</v-icon>
             Tableau
           </v-tab>
         </v-tabs>
@@ -343,7 +373,7 @@ onMounted(() => {
           <v-tabs-window v-model="activeTab">
             <!-- Graphique en barres -->
             <v-tabs-window-item value="chart">
-              <div style="height: 400px">
+              <div style="height: 350px">
                 <Bar :data="barChartData" :options="barChartOptions" />
               </div>
             </v-tabs-window-item>
@@ -351,7 +381,7 @@ onMounted(() => {
             <!-- Graphique donut -->
             <v-tabs-window-item value="doughnut">
               <div class="d-flex justify-center">
-                <div style="height: 400px; width: 400px">
+                <div style="height: 350px; width: 350px">
                   <Doughnut :data="doughnutChartData" :options="doughnutChartOptions" />
                 </div>
               </div>
@@ -359,11 +389,11 @@ onMounted(() => {
 
             <!-- Tableau -->
             <v-tabs-window-item value="table">
-              <v-table hover>
+              <v-table hover class="stats-table">
                 <thead>
-                  <tr class="bg-grey-lighten-4">
+                  <tr>
                     <th class="text-left">Code Analytique</th>
-                    <th class="text-right">Distance Totale</th>
+                    <th class="text-right">Distance</th>
                     <th v-if="groupBy !== 'none'" class="text-left">Periode</th>
                     <th class="text-right">Part</th>
                   </tr>
@@ -371,55 +401,31 @@ onMounted(() => {
                 <tbody>
                   <tr v-for="(item, index) in stats.items" :key="index">
                     <td>
-                      <v-chip
-                        :color="
-                          item.analyticCode === 'PASSENGER'
-                            ? 'primary'
-                            : item.analyticCode === 'FREIGHT'
-                              ? 'warning'
-                              : item.analyticCode === 'MAINTENANCE'
-                                ? 'info'
-                                : 'secondary'
-                        "
-                        variant="flat"
-                        size="small"
-                      >
-                        <v-icon start size="small">
-                          {{
-                            item.analyticCode === 'PASSENGER'
-                              ? 'mdi-account-group'
-                              : item.analyticCode === 'FREIGHT'
-                                ? 'mdi-package-variant'
-                                : item.analyticCode === 'MAINTENANCE'
-                                  ? 'mdi-wrench'
-                                  : 'mdi-cog'
-                          }}
-                        </v-icon>
+                      <v-chip :color="getCodeColor(item.analyticCode)" variant="flat" size="small">
+                        <v-icon start size="x-small">{{ getCodeIcon(item.analyticCode) }}</v-icon>
                         {{ item.analyticCode }}
                       </v-chip>
                     </td>
                     <td class="text-right">
-                      <span class="font-weight-bold">{{ item.totalDistanceKm.toFixed(2) }}</span>
+                      <span class="font-weight-medium">{{ item.totalDistanceKm.toFixed(2) }}</span>
                       <span class="text-medium-emphasis"> km</span>
                     </td>
                     <td v-if="groupBy !== 'none'">
-                      <v-chip size="small" variant="outlined">
-                        {{ item.group }}
-                      </v-chip>
+                      {{ item.group }}
                     </td>
                     <td class="text-right">
-                      <v-chip size="small" color="grey-lighten-2">
+                      <span class="text-medium-emphasis">
                         {{ ((item.totalDistanceKm / totalDistance) * 100).toFixed(1) }}%
-                      </v-chip>
+                      </span>
                     </td>
                   </tr>
                 </tbody>
                 <tfoot>
-                  <tr class="bg-grey-lighten-4 font-weight-bold">
-                    <td>Total</td>
-                    <td class="text-right">{{ totalDistance.toFixed(2) }} km</td>
+                  <tr class="total-row">
+                    <td class="font-weight-bold">Total</td>
+                    <td class="text-right font-weight-bold">{{ totalDistance.toFixed(2) }} km</td>
                     <td v-if="groupBy !== 'none'"></td>
-                    <td class="text-right">100%</td>
+                    <td class="text-right font-weight-bold">100%</td>
                   </tr>
                 </tfoot>
               </v-table>
@@ -432,11 +438,71 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.border-b {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
-}
+  .card-elevated {
+    border: 1px solid rgba(0, 0, 0, 0.08);
+  }
 
-.gap-2 {
-  gap: 8px;
-}
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  @media (max-width: 768px) {
+    .kpi-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .kpi-card {
+    border: 1px solid rgba(0, 0, 0, 0.08);
+  }
+
+  .kpi-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .bg-accent {
+    background: #e6007e;
+  }
+
+  .bg-primary {
+    background: #001f78;
+  }
+
+  .bg-success {
+    background: #228b22;
+  }
+
+  .field-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: #666;
+    margin-bottom: 4px;
+  }
+
+  .gap-2 {
+    gap: 8px;
+  }
+
+  .tabs-border {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  }
+
+  .stats-table th {
+    font-weight: 500 !important;
+    font-size: 12px !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #666 !important;
+  }
+
+  .total-row {
+    background: #f8f8f8;
+  }
 </style>

@@ -23,10 +23,13 @@ class Route
     private float $distanceKm;
     /** @var string[] */
     private array $path;
+    /** @var float[] */
+    private array $segmentDistances;
     private DateTimeImmutable $createdAt;
 
     /**
      * @param string[] $path
+     * @param float[] $segmentDistances
      */
     private function __construct(
         string $id,
@@ -35,6 +38,7 @@ class Route
         AnalyticCode $analyticCode,
         Distance $distance,
         array $path,
+        array $segmentDistances,
         DateTimeImmutable $createdAt
     ) {
         $this->id = $id;
@@ -43,6 +47,7 @@ class Route
         $this->analyticCode = $analyticCode->value();
         $this->distanceKm = $distance->value();
         $this->path = $path;
+        $this->segmentDistances = $segmentDistances;
         $this->createdAt = $createdAt;
     }
 
@@ -59,6 +64,7 @@ class Route
             $analyticCode,
             $calculatedPath->totalDistance(),
             $calculatedPath->stationIds(),
+            $calculatedPath->segmentDistances(),
             new DateTimeImmutable()
         );
     }
@@ -101,6 +107,14 @@ class Route
         return $this->path;
     }
 
+    /**
+     * @return float[]
+     */
+    public function segmentDistances(): array
+    {
+        return $this->segmentDistances;
+    }
+
     public function createdAt(): DateTimeImmutable
     {
         return $this->createdAt;
@@ -119,6 +133,7 @@ class Route
             'analyticCode' => $this->analyticCode,
             'distanceKm' => $this->distanceKm,
             'path' => $this->path,
+            'segmentDistances' => $this->segmentDistances,
             'createdAt' => $this->createdAt->format(DateTimeImmutable::ATOM),
         ];
     }

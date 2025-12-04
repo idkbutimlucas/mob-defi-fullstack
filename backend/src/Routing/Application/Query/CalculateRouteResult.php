@@ -10,14 +10,16 @@ namespace App\Routing\Application\Query;
 final readonly class CalculateRouteResult
 {
     /**
-     * @param string[] $stations     Liste des codes de stations
-     * @param string[] $stationNames Liste des noms de stations
+     * @param string[] $stations           Liste des codes de stations
+     * @param string[] $stationNames       Liste des noms de stations
+     * @param float[]  $segmentDistances   Distances entre chaque paire de stations
      */
     public function __construct(
         public array $stations,
         public array $stationNames,
         public float $totalDistance,
-        public int $segmentCount
+        public int $segmentCount,
+        public array $segmentDistances = []
     ) {
     }
 }

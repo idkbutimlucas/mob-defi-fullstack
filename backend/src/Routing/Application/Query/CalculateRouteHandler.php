@@ -41,7 +41,8 @@ final readonly class CalculateRouteHandler
             stations: $path->stationIds(),
             stationNames: $stationNames,
             totalDistance: $path->totalDistance()->value(),
-            segmentCount: $path->segmentCount()
+            segmentCount: $path->segmentCount(),
+            segmentDistances: $path->segmentDistances()
         );
     }
 }

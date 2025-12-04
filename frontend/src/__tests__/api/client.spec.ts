@@ -65,6 +65,7 @@ describe('API Client', () => {
         analyticCode: 'PASSENGER',
         distanceKm: 62.4,
         path: ['MX', 'CGE', 'ZW'],
+        segmentDistances: [30.2, 32.2],
         createdAt: '2025-01-01T00:00:00Z',
       }
 

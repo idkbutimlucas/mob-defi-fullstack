@@ -78,14 +78,19 @@ final class DijkstraPathFinder implements PathFinderInterface
             throw NoRouteFoundException::between($from, $to);
         }
 
-        return $this->buildPath($previous, $from, $to, Distance::fromKilometers($distances[$to->value()]));
+        return $this->buildPath($network, $previous, $from, $to, Distance::fromKilometers($distances[$to->value()]));
     }
 
     /**
      * @param array<string, string|null> $previous
      */
-    private function buildPath(array $previous, StationId $from, StationId $to, Distance $totalDistance): Path
-    {
+    private function buildPath(
+        Network $network,
+        array $previous,
+        StationId $from,
+        StationId $to,
+        Distance $totalDistance
+    ): Path {
         $path = [];
         $current = $to->value();
 
@@ -94,6 +99,20 @@ final class DijkstraPathFinder implements PathFinderInterface
             $current = $previous[$current];
         }
 
-        return Path::create($path, $totalDistance);
+        // Calculate segment distances
+        $segmentDistances = [];
+        for ($i = 0; $i < count($path) - 1; $i++) {
+            $fromStation = $path[$i];
+            $toStation = $path[$i + 1];
+            $neighbors = $network->getNeighbors($fromStation);
+            foreach ($neighbors as $neighbor) {
+                if ($neighbor->stationId()->equals($toStation)) {
+                    $segmentDistances[] = $neighbor->distance()->value();
+                    break;
+                }
+            }
+        }
+
+        return Path::create($path, $totalDistance, $segmentDistances);
     }
 }
