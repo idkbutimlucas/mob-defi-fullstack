@@ -16,10 +16,12 @@ final readonly class Path
 {
     /**
      * @param StationId[] $stations
+     * @param float[] $segmentDistances Distances entre chaque paire de stations consécutives
      */
     private function __construct(
         private array $stations,
-        private Distance $totalDistance
+        private Distance $totalDistance,
+        private array $segmentDistances = []
     ) {
         if (count($stations) < 2) {
             throw new InvalidArgumentException(
@@ -30,10 +32,11 @@ final readonly class Path
 
     /**
      * @param StationId[] $stations
+     * @param float[] $segmentDistances
      */
-    public static function create(array $stations, Distance $totalDistance): self
+    public static function create(array $stations, Distance $totalDistance, array $segmentDistances = []): self
     {
-        return new self($stations, $totalDistance);
+        return new self($stations, $totalDistance, $segmentDistances);
     }
 
     /**
@@ -78,5 +81,13 @@ final readonly class Path
     public function segmentCount(): int
     {
         return count($this->stations) - 1;
+    }
+
+    /**
+     * @return float[]
+     */
+    public function segmentDistances(): array
+    {
+        return $this->segmentDistances;
     }
 }

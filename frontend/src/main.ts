@@ -1,33 +1,74 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 
-// Vuetify
+// Vuetify - import everything from main entry to avoid pre-bundling issues
 import 'vuetify/styles'
 import { createVuetify } from 'vuetify'
-import * as components from 'vuetify/components'
-import * as directives from 'vuetify/directives'
 import '@mdi/font/css/materialdesignicons.css'
 
 import App from './App.vue'
 import router from './router'
 
+// Theme MOB - Montreux Oberland Bernois
+// Inspiré du site officiel mob.ch
 const vuetify = createVuetify({
-  components,
-  directives,
   theme: {
-    defaultTheme: 'light',
+    defaultTheme: 'mobTheme',
     themes: {
-      light: {
+      mobTheme: {
+        dark: false,
         colors: {
-          primary: '#1976D2',
-          secondary: '#424242',
-          accent: '#82B1FF',
-          error: '#FF5252',
-          info: '#2196F3',
-          success: '#4CAF50',
-          warning: '#FFC107',
+          // Couleurs MOB officielles
+          primary: '#001f78', // Bleu MOB
+          secondary: '#001f78', // Bleu MOB
+          accent: '#e6007e', // Pink MOB
+          background: '#f1f1f1', // Gris clair
+          surface: '#FFFFFF',
+
+          // États
+          error: '#D32F2F',
+          info: '#0288D1',
+          success: '#228b22', // Vert MOB
+          warning: '#F57C00',
+
+          // Personnalisés
+          'on-primary': '#FFFFFF',
+          'on-secondary': '#FFFFFF',
         },
       },
+    },
+  },
+  defaults: {
+    VCard: {
+      elevation: 0,
+      rounded: 0,
+    },
+    VBtn: {
+      rounded: 0,
+    },
+    VTextField: {
+      variant: 'outlined',
+      density: 'comfortable',
+      rounded: 0,
+    },
+    VSelect: {
+      variant: 'outlined',
+      density: 'comfortable',
+      rounded: 0,
+    },
+    VAutocomplete: {
+      variant: 'outlined',
+      density: 'comfortable',
+      rounded: 0,
+    },
+    VChip: {
+      rounded: 0,
+    },
+    VAlert: {
+      rounded: 0,
+    },
+    VTab: {
+      rounded: 0,
     },
   },
 })

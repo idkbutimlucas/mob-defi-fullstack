@@ -47,7 +47,8 @@ describe('StatsView', () => {
 
   it('should render the stats title', () => {
     const wrapper = mount(StatsView)
-    expect(wrapper.text()).toContain('Statistiques par Code Analytique')
+    expect(wrapper.text()).toContain('Statistiques')
+    expect(wrapper.text()).toContain('Analysez les distances parcourues par code analytique')
   })
 
   it('should load stats on mount', async () => {
@@ -71,6 +72,10 @@ describe('StatsView', () => {
 
     const wrapper = mount(StatsView)
     await flushPromises()
+
+    // Switch to table tab
+    ;(wrapper.vm as any).activeTab = 'table'
+    await wrapper.vm.$nextTick()
 
     expect(wrapper.text()).toContain('PASSENGER')
     expect(wrapper.text()).toContain('150.50')
@@ -124,6 +129,10 @@ describe('StatsView', () => {
     // Submit to get grouped data
     await wrapper.find('form').trigger('submit')
     await flushPromises()
+
+    // Switch to table tab to see period column
+    ;(wrapper.vm as any).activeTab = 'table'
+    await wrapper.vm.$nextTick()
 
     expect(wrapper.text()).toContain('Periode')
     expect(wrapper.text()).toContain('2025-01')

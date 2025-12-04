@@ -75,6 +75,7 @@ final class RouteController
                 'analyticCode' => $data['analyticCode'],
                 'distanceKm' => $result->totalDistance,
                 'path' => $result->stations,
+                'segmentDistances' => $result->segmentDistances,
                 'createdAt' => $createdAt->format(\DateTimeInterface::ATOM),
             ], Response::HTTP_CREATED);
         } catch (StationNotFoundException $e) {

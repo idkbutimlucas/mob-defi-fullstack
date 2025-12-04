@@ -18,6 +18,7 @@ export interface RouteResponse {
   analyticCode: string
   distanceKm: number
   path: string[]
+  segmentDistances: number[]
   createdAt: string
 }
 
