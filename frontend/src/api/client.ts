@@ -1,8 +1,5 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://localhost/api/v1'
 
-// Token storage
-let authToken: string | null = null
-
 export interface Station {
   id: string
   name: string
@@ -30,35 +27,13 @@ export interface ApiError {
   code?: string
 }
 
-export interface LoginResponse {
-  token: string
-}
-
-export function setAuthToken(token: string | null): void {
-  authToken = token
-}
-
-export function getAuthToken(): string | null {
-  return authToken
-}
-
-async function fetchApi<T>(
-  endpoint: string,
-  options?: RequestInit,
-  requiresAuth = false
-): Promise<T> {
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options?.headers as Record<string, string>),
-  }
-
-  if (requiresAuth && authToken) {
-    headers['Authorization'] = `Bearer ${authToken}`
-  }
-
+async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,
-    headers,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
   })
 
   if (!response.ok) {
@@ -69,28 +44,15 @@ async function fetchApi<T>(
   return response.json()
 }
 
-export async function login(username: string, password: string): Promise<string> {
-  const response = await fetchApi<LoginResponse>('/login', {
-    method: 'POST',
-    body: JSON.stringify({ username, password }),
-  })
-  authToken = response.token
-  return response.token
-}
-
 export async function getStations(): Promise<Station[]> {
   return fetchApi<Station[]>('/stations')
 }
 
 export async function calculateRoute(request: RouteRequest): Promise<RouteResponse> {
-  return fetchApi<RouteResponse>(
-    '/routes',
-    {
-      method: 'POST',
-      body: JSON.stringify(request),
-    },
-    true
-  )
+  return fetchApi<RouteResponse>('/routes', {
+    method: 'POST',
+    body: JSON.stringify(request),
+  })
 }
 
 export type GroupBy = 'none' | 'day' | 'month' | 'year'
@@ -123,5 +85,5 @@ export async function getStats(request: StatsRequest = {}): Promise<StatsRespons
   if (request.groupBy) params.append('groupBy', request.groupBy)
 
   const query = params.toString()
-  return fetchApi<StatsResponse>(`/stats/distances${query ? `?${query}` : ''}`, undefined, true)
+  return fetchApi<StatsResponse>(`/stats/distances${query ? `?${query}` : ''}`)
 }

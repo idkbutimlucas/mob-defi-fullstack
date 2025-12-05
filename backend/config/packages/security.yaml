@@ -32,15 +32,9 @@ security:
     access_control:
         - { path: ^/api/v1/login, roles: PUBLIC_ACCESS }
         - { path: ^/api/v1/stations, roles: PUBLIC_ACCESS }
-        - { path: ^/api/v1/routes, roles: ROLE_API }
-        - { path: ^/api/v1/stats, roles: ROLE_API }
+        - { path: ^/api/v1/routes, roles: PUBLIC_ACCESS }
+        - { path: ^/api/v1/stats, roles: PUBLIC_ACCESS }
         - { path: ^/api, roles: ROLE_API }
-
-when@dev:
-    security:
-        password_hashers:
-            Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
-                algorithm: plaintext
 
 when@test:
     security:
