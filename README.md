@@ -143,50 +143,230 @@ Bonne chance, et surtout amuse-toi en codant !
 
 ---
 
-# 📦 Solution - Instructions de déploiement
+# 💡 Ma Solution
+
+## Résumé du défi
+
+|              | Tests | Coverage | Linting | Analyse |
+|--------------|-------|----------|---------|---------|
+| **Backend**  | [![Backend Tests](https://github.com/idkbutimlucas/mob-defi-fullstack/actions/workflows/backend.yml/badge.svg)](https://github.com/idkbutimlucas/mob-defi-fullstack/actions/workflows/backend.yml) | [![codecov](https://codecov.io/gh/idkbutimlucas/mob-defi-fullstack/graph/badge.svg?flag=backend)](https://codecov.io/gh/idkbutimlucas/mob-defi-fullstack) | ![PHPCS](https://img.shields.io/badge/PHPCS-PSR--12-blue) | ![PHPStan](https://img.shields.io/badge/PHPStan-level%208-brightgreen) |
+| **Frontend** | [![Frontend Tests](https://github.com/idkbutimlucas/mob-defi-fullstack/actions/workflows/frontend.yml/badge.svg)](https://github.com/idkbutimlucas/mob-defi-fullstack/actions/workflows/frontend.yml) | [![codecov](https://codecov.io/gh/idkbutimlucas/mob-defi-fullstack/graph/badge.svg?flag=frontend)](https://codecov.io/gh/idkbutimlucas/mob-defi-fullstack) | ![ESLint](https://img.shields.io/badge/ESLint-configured-blue) | ![TypeScript](https://img.shields.io/badge/TypeScript-strict-brightgreen) |
+
+### Critères d'évaluation
+
+| Critère | Statut | Détails |
+|---------|--------|---------|
+| **Couverture** | ✅ | Rapports générés, seuil 80% atteint |
+| **OpenAPI** | ✅ | Conformité stricte des endpoints et schémas |
+| **Docker** | ✅ | Démarrage en une commande (`docker compose up -d`) |
+| **Frontend** | ✅ | UX propre, TypeScript strict, tests Vitest |
+| **CI/CD** | ✅ | 4 workflows GitHub Actions, scans sécurité |
+| **Sécurité** | ✅ | HTTPS, JWT, headers sécurisés, secrets en .env |
+| **Qualité** | ✅ | DDD, commits atomiques, PSR-12 |
+
+### Points Bonus
+
+| Bonus | Statut | Implémentation |
+|-------|--------|----------------|
+| **Algorithme Dijkstra** | ✅ | Calcul du plus court chemin optimisé |
+| **Endpoint statistiques** | ✅ | `GET /api/v1/stats/distances` avec filtres |
+| **Visualisation stats** | ✅ | Graphiques Chart.js dans le frontend |
+
+---
+
+## À propos de ma démarche
+
+En abordant ce défi, j'ai voulu démontrer non seulement mes compétences techniques, mais aussi ma façon de réfléchir et de structurer un projet professionnel. Diplômé d'un Master 2 en informatique, j'ai eu l'occasion pendant mes trois années d'alternance en entreprise de travailler avec PHP natif et Symfony, de mettre en place des pipelines CI/CD et de conteneuriser des applications avec Docker. Cette expérience m'a permis d'acquérir une vision concrète du développement en contexte professionnel.
+
+Pour ce défi, j'ai cherché à appliquer les bonnes pratiques que j'ai apprises tout en m'adaptant aux outils et méthodologies mentionnés dans l'énoncé. Mon objectif principal était de livrer une solution qui pourrait être mise en production sans modifications majeures, tout en gardant un code lisible et maintenable par une équipe.
+
+---
+
+## 🏗️ Architecture et choix techniques
+
+> Pour une documentation complète de l'architecture, voir [ARCHITECTURE.md](./ARCHITECTURE.md)
+
+### Vue d'ensemble
+
+```text
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   Client    │────▶│   Nginx     │────▶│   Backend   │────▶│ PostgreSQL  │
+│   (Vue 3)   │     │   (HTTPS)   │     │   (PHP 8.4) │     │    (16)     │
+└─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
+```
+
+### Stack technique
+
+| Layer | Technologie | Justification |
+|-------|-------------|---------------|
+| **Frontend** | Vue 3 + Vuetify 3 + TypeScript | Stack demandée, Material Design, typage fort |
+| **Backend** | PHP 8.4 + Symfony 7 | Framework utilisé en interne, DDD-friendly |
+| **Base de données** | PostgreSQL 16 | Robuste, performant, standard entreprise |
+| **Auth** | JWT (lexik/jwt-auth-bundle) | Stateless, standard REST |
+| **Routing** | Algorithme de Dijkstra | Plus court chemin optimal |
+| **Tests** | PHPUnit + Vitest | Coverage 80%+, TDD |
+| **CI/CD** | GitHub Actions | Compatible GitLab CI |
+| **Sécurité** | HTTPS, CSP, Rate limiting | Headers sécurisés, protection OWASP |
+
+### Architecture DDD
+
+Le backend suit une architecture Domain-Driven Design avec des Bounded Contexts séparés :
+
+- **Routing** : Gestion des stations, réseau, calcul de trajets
+- **Analytics** : Statistiques agrégées par code analytique
+- **Auth** : Authentification et gestion des utilisateurs
+- **Shared Kernel** : Value Objects partagés (StationId, Distance, AnalyticCode)
+
+---
+
+## 🧠 Mon raisonnement et mes choix techniques
+
+### Pourquoi Symfony 7 ?
+
+J'ai choisi Symfony pour plusieurs raisons. D'abord, c'est un framework que vous utilisez en interne, ce qui me semblait pertinent pour démontrer ma capacité à m'intégrer rapidement dans votre environnement. Ensuite, ayant déjà travaillé avec Symfony en alternance, je connais bien son écosystème et ses conventions. Symfony offre une architecture solide qui se prête naturellement au Domain-Driven Design grâce à son système d'autowiring et son découplage des composants.
+
+J'aurais pu opter pour une approche plus légère avec Slim ou même du PHP natif (que je maîtrise également), mais j'ai préféré montrer ma capacité à exploiter pleinement un framework complet, avec tout ce que cela implique en termes de configuration et de bonnes pratiques.
+
+### Pourquoi le Domain-Driven Design ?
+
+Le DDD n'était pas obligatoire, mais j'ai fait ce choix délibérément. Le domaine métier du défi (réseau ferroviaire, trajets, codes analytiques) se prête parfaitement à cette approche. En structurant le code en Bounded Contexts (Routing, Analytics, Auth) et en utilisant des Value Objects pour les concepts clés (StationId, Distance, AnalyticCode), j'ai voulu montrer que je ne me contente pas de "faire fonctionner" le code, mais que je réfléchis à sa maintenabilité sur le long terme.
+
+Cette architecture permet à un nouveau développeur de comprendre rapidement où se trouve chaque responsabilité et facilite l'ajout de nouvelles fonctionnalités sans risquer de casser l'existant.
+
+### L'algorithme de Dijkstra
+
+Pour le calcul des trajets, j'ai implémenté l'algorithme de Dijkstra plutôt qu'une simple recherche en largeur (BFS). Même si BFS aurait suffi pour trouver un chemin, Dijkstra garantit de trouver le plus court chemin en termes de distance kilométrique, ce qui est essentiel dans un contexte ferroviaire où les coûts et les temps de trajet dépendent des distances.
+
+J'ai utilisé une `SplPriorityQueue` de PHP pour optimiser les performances. L'implémentation est accompagnée de tests unitaires couvrant tous les cas : chemins directs, chemins via plusieurs stations, cas d'erreur, réseaux complexes avec plusieurs routes possibles.
+
+### La gestion de l'authentification
+
+J'ai implémenté un système d'authentification complet avec inscription et connexion des utilisateurs, alors que ce n'était pas explicitement demandé. Mon raisonnement : dans un contexte réel, on ne déploierait jamais une API avec un simple utilisateur en mémoire. J'ai donc créé une entité User avec Doctrine, un système d'inscription avec validation, et la persistance des utilisateurs en base de données.
+
+Cela m'a également permis de démontrer ma compréhension du système de sécurité de Symfony et de l'intégration JWT.
+
+---
+
+## 🔍 Les défis rencontrés et comment je les ai résolus
+
+### Configuration des tests avec Doctrine
+
+L'un des défis a été de faire cohabiter les tests unitaires (qui n'ont pas besoin de base de données) avec les tests fonctionnels (qui en ont besoin). J'ai résolu ce problème en configurant SQLite en mémoire pour l'environnement de test, ce qui permet des tests rapides tout en validant les interactions avec la base de données.
+
+### Le réseau ferroviaire bidirectionnel
+
+Les données fournies dans `distances.json` représentent des segments unidirectionnels, mais un train peut évidemment circuler dans les deux sens. J'ai donc implémenté le `JsonNetworkLoader` pour créer automatiquement les connexions bidirectionnelles, tout en m'assurant que les distances restent cohérentes dans les deux directions.
+
+### L'interface utilisateur MOB
+
+J'ai voulu créer une interface qui ressemble à ce qu'on pourrait trouver sur le site officiel du MOB. J'ai donc intégré le logo officiel et adopté une charte graphique sobre avec le bleu MOB (#001f78) et le rose accent (#e6007e). L'objectif était de montrer que je peux m'adapter à une identité visuelle existante.
+
+---
+
+## 📊 Ce que j'ai appris
+
+Ce défi m'a permis d'approfondir plusieurs aspects :
+
+- **PHPStan au niveau 8** : C'est la première fois que je configure PHPStan au niveau maximum. Cela m'a forcé à être rigoureux sur le typage et à anticiper les cas null.
+
+- **GitHub Actions** : J'avais l'habitude de GitLab CI pendant mon alternance, mais j'ai découvert que GitHub Actions offre une syntaxe différente mais tout aussi puissante. La migration vers TeamCity serait relativement simple car la logique reste la même.
+
+- **Trivy pour le scan de conteneurs** : C'est un outil que je ne connaissais pas et que j'intégrerai désormais systématiquement dans mes pipelines.
+
+---
+
+## 🎯 Si j'avais plus de temps
+
+Voici ce que j'ajouterais pour aller plus loin :
+
+1. **Swagger UI** : Un endpoint `/api/docs` pour visualiser et tester l'API de manière interactive.
+
+2. **Tests E2E avec Cypress** : Pour valider les parcours utilisateurs complets du frontend.
+
+3. **Carte interactive** : Visualiser le réseau MOB sur une carte avec les trajets calculés.
+
+4. **Historique des trajets** : Permettre aux utilisateurs de consulter leurs recherches passées.
+
+---
+
+# 📦 Instructions de déploiement
 
 ## Prérequis
 
 - Docker Engine 25+
 - Docker Compose v2+
-- OpenSSL (pour générer les certificats)
+- Make (inclus sur macOS/Linux)
 
-## Déploiement rapide
+## Déploiement en une commande
 
 ```bash
 # 1. Cloner le repository
 git clone https://github.com/idkbutimlucas/mob-defi-fullstack.git
 cd mob-defi-fullstack
 
-# 2. Copier le fichier d'environnement
-cp .env.example .env
+# 2. Lancer le setup complet (env, ssl, jwt, db, containers)
+make init
+```
 
-# 3. Générer les certificats SSL (auto-signés pour dev)
-mkdir -p nginx/ssl
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-  -keyout nginx/ssl/key.pem \
-  -out nginx/ssl/cert.pem \
-  -subj "/CN=localhost"
+C'est tout ! Le Makefile gère automatiquement :
+- Création du fichier `.env`
+- Génération des certificats SSL auto-signés
+- Génération des clés JWT RSA 4096 bits
+- Build et démarrage des containers Docker
+- Création du schéma de base de données
 
-# 4. Générer les clés JWT
-mkdir -p backend/config/jwt
-openssl genpkey -algorithm RSA -out backend/config/jwt/private.pem -pkeyopt rsa_keygen_bits:4096
-openssl rsa -pubout -in backend/config/jwt/private.pem -out backend/config/jwt/public.pem
+### Commandes disponibles
 
-# 5. Lancer l'application
+```bash
+make init       # Setup complet (première utilisation)
+make start      # Démarrer les services
+make stop       # Arrêter les services
+make test       # Lancer tous les tests
+make lint       # Lancer les linters
+make storybook  # Démarrer Storybook
+make help       # Voir toutes les commandes
+```
+
+### Alternative sans Make (Windows)
+
+<details>
+<summary>Cliquer pour voir les commandes manuelles</summary>
+
+```powershell
+# 1. Créer le fichier .env
+copy .env.example .env
+
+# 2. Générer les certificats SSL
+mkdir nginx\ssl
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout nginx\ssl\key.pem -out nginx\ssl\cert.pem -subj "/CN=localhost"
+
+# 3. Générer les clés JWT
+mkdir backend\config\jwt
+openssl genpkey -algorithm RSA -out backend\config\jwt\private.pem -pkeyopt rsa_keygen_bits:4096
+openssl rsa -pubout -in backend\config\jwt\private.pem -out backend\config\jwt\public.pem
+
+# 4. Démarrer les services
 docker compose up -d
 
-# 6. Créer le schéma de base de données
+# 5. Créer le schéma de base de données
 docker compose exec backend php bin/console doctrine:schema:create
+```
 
-# 7. (Optionnel) Lancer Storybook
-docker compose --profile dev up -d storybook
+</details>
+
+### Après l'installation initiale
+
+Une fois `make init` exécuté, vous pouvez simplement utiliser :
+
+```bash
+docker compose up -d
 ```
 
 L'application est accessible sur :
-- **Frontend** : https://localhost
-- **API** : https://localhost/api/v1
-- **Storybook** : http://localhost:6006
+
+- **Frontend** : <https://localhost>
+- **API** : <https://localhost/api/v1>
+- **Storybook** : <http://localhost:6006>
 
 ## Authentification API
 
@@ -209,7 +389,7 @@ curl -sk -X POST https://localhost/api/v1/login \
 
 ## Structure du projet
 
-```
+```text
 mob-defi-fullstack/
 ├── backend/          # API PHP 8.4 / Symfony 7
 ├── frontend/         # Vue.js 3 / Vuetify 3 / TypeScript

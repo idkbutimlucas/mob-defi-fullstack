@@ -99,5 +99,13 @@ jobs:
             echo "::warning::Coverage is below 80% threshold: $COVERAGE%"
           fi
 
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: backend/coverage.xml
+          flags: backend
+          name: backend-coverage
+          token: ${{ secrets.CODECOV_TOKEN }}
+
       - name: Security audit
         run: composer audit

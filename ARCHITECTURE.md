@@ -61,35 +61,36 @@ Ce document décrit les choix techniques et l'architecture de la solution.
 
 ### Bounded Contexts
 
-```
-                    BOUNDED CONTEXTS
-+----------------------------------------------------------+
-|                                                           |
-|   +----------------+      +----------------+              |
-|   |    ROUTING     |      |   ANALYTICS    |              |
-|   |    Context     |      |    Context     |              |
-|   +----------------+      +----------------+              |
-|   | - Station      |      | - RouteRecord  |              |
-|   | - Network      |      | - AnalyticCode |              |
-|   | - Route        |      | - Statistics   |              |
-|   | - PathFinder   |      |                |              |
-|   +-------+--------+      +--------+-------+              |
-|           |                        |                      |
-|           +----------+-------------+                      |
-|                      |                                    |
-|           +----------v----------+                         |
-|           |   SHARED KERNEL     |                         |
-|           +---------------------+                         |
-|           | - StationId (VO)    |                         |
-|           | - Distance (VO)     |                         |
-|           | - AnalyticCode (VO) |                         |
-|           +---------------------+                         |
-+----------------------------------------------------------+
+```text
+                         BOUNDED CONTEXTS
++---------------------------------------------------------------------+
+|                                                                      |
+|   +----------------+    +----------------+    +----------------+     |
+|   |    ROUTING     |    |   ANALYTICS    |    |      AUTH      |     |
+|   |    Context     |    |    Context     |    |    Context     |     |
+|   +----------------+    +----------------+    +----------------+     |
+|   | - Station      |    | - RouteRecord  |    | - User         |     |
+|   | - Network      |    | - AnalyticCode |    | - Credentials  |     |
+|   | - Route        |    | - Statistics   |    | - JWT Token    |     |
+|   | - PathFinder   |    |                |    |                |     |
+|   +-------+--------+    +--------+-------+    +--------+-------+     |
+|           |                      |                     |             |
+|           +----------+-----------+----------+----------+             |
+|                      |                                               |
+|           +----------v----------+                                    |
+|           |   SHARED KERNEL     |                                    |
+|           +---------------------+                                    |
+|           | - StationId (VO)    |                                    |
+|           | - Distance (VO)     |                                    |
+|           | - AnalyticCode (VO) |                                    |
+|           | - UuidGenerator     |                                    |
+|           +---------------------+                                    |
++---------------------------------------------------------------------+
 ```
 
 ### Structure du code
 
-```
+```text
 backend/src/
 ├── Routing/                          # Bounded Context: Routing
 │   ├── Domain/
@@ -108,8 +109,10 @@ backend/src/
 │   │       └── NoRouteFoundException.php
 │   │
 │   ├── Application/
-│   │   ├── CalculateRouteCommand.php
-│   │   └── CalculateRouteHandler.php
+│   │   ├── Command/
+│   │   │   └── CalculateRouteCommand.php
+│   │   └── Query/
+│   │       └── GetStationsQuery.php
 │   │
 │   └── Infrastructure/
 │       ├── Algorithm/
@@ -123,18 +126,45 @@ backend/src/
 │
 ├── Analytics/                        # Bounded Context: Analytics
 │   ├── Domain/
+│   │   ├── Model/
+│   │   │   └── AnalyticDistance.php
 │   │   └── Repository/
 │   │       └── RouteRecordRepositoryInterface.php
 │   │
+│   ├── Application/
+│   │   └── Query/
+│   │       └── GetDistanceStatsQuery.php
+│   │
 │   └── Infrastructure/
+│       ├── Persistence/
+│       │   └── DoctrineRouteRecordRepository.php
 │       └── Http/
 │           └── StatsController.php
 │
+├── Auth/                             # Bounded Context: Auth
+│   ├── Domain/
+│   │   ├── Model/
+│   │   │   └── User.php              # Entity (Doctrine)
+│   │   └── Repository/
+│   │       └── UserRepositoryInterface.php
+│   │
+│   └── Infrastructure/
+│       ├── Persistence/
+│       │   └── DoctrineUserRepository.php
+│       └── Http/
+│           ├── AuthController.php    # Login endpoint
+│           ├── RegisterController.php # Registration
+│           └── MeController.php      # Current user info
+│
 └── Shared/                           # Shared Kernel
-    └── Domain/
-        ├── StationId.php             # Value Object
-        ├── Distance.php              # Value Object
-        └── AnalyticCode.php          # Value Object
+    ├── Domain/
+    │   ├── StationId.php             # Value Object
+    │   ├── Distance.php              # Value Object
+    │   └── AnalyticCode.php          # Value Object
+    │
+    └── Infrastructure/
+        └── Uuid/
+            └── RamseyUuidGenerator.php
 ```
 
 ## Algorithme de Dijkstra
@@ -172,9 +202,108 @@ Complexité : O((V + E) log V) avec V = stations, E = segments
 - Token expiration configurable
 - Endpoint `/api/v1/stations` public pour l'UI
 
+### Système d'authentification
+
+```text
+                    FLUX D'AUTHENTIFICATION
++------------------------------------------------------------------+
+|                                                                   |
+|   ┌──────────┐    POST /login     ┌──────────┐                   |
+|   │  Client  │ ─────────────────▶ │  Backend │                   |
+|   │  (Vue)   │   username/pass    │  (PHP)   │                   |
+|   └────┬─────┘                    └────┬─────┘                   |
+|        │                               │                          |
+|        │   ◀─────────────────────────  │                          |
+|        │        JWT Token              │ Validation credentials   |
+|        │                               │ + Génération JWT         |
+|        │                               │                          |
+|   ┌────▼─────┐    API Request     ┌────▼─────┐                   |
+|   │  Pinia   │ ─────────────────▶ │  Routes  │                   |
+|   │  Store   │  Authorization:    │ protégées│                   |
+|   └──────────┘  Bearer <token>    └──────────┘                   |
+|                                                                   |
++------------------------------------------------------------------+
+```
+
+**Endpoints d'authentification** :
+
+| Endpoint | Méthode | Description | Auth |
+|----------|---------|-------------|------|
+| `/api/v1/login` | POST | Connexion utilisateur | Non |
+| `/api/v1/register` | POST | Inscription utilisateur | Non |
+| `/api/v1/me` | GET | Infos utilisateur connecté | Oui |
+| `/api/v1/stations` | GET | Liste des stations | Non |
+
+**Sécurité des mots de passe** :
+- Hashage avec `password_hash()` (bcrypt)
+- Validation côté serveur (min 6 caractères)
+- Pas de stockage en clair
+
+## Architecture Frontend
+
+### Structure des composants Vue
+
+```text
+frontend/src/
+├── views/                    # Pages principales
+│   ├── HomeView.vue          # Calcul de trajet
+│   ├── StatsView.vue         # Statistiques
+│   ├── LoginView.vue         # Connexion
+│   └── SignupView.vue        # Inscription
+│
+├── stores/                   # État global (Pinia)
+│   ├── auth.ts               # Authentification
+│   └── stations.ts           # Cache des stations
+│
+├── api/                      # Couche API
+│   └── client.ts             # Client HTTP typé
+│
+├── router/                   # Navigation
+│   └── index.ts              # Routes + guards
+│
+└── stories/                  # Storybook
+    ├── HomeView.stories.ts
+    ├── StatsView.stories.ts
+    ├── LoginView.stories.ts
+    └── SignupView.stories.ts
+```
+
+### Gestion d'état avec Pinia
+
+```text
+┌─────────────────────────────────────────────────────────┐
+│                      PINIA STORES                        │
+├─────────────────────────────────────────────────────────┤
+│                                                          │
+│  ┌──────────────┐          ┌──────────────┐             │
+│  │  Auth Store  │          │Stations Store│             │
+│  ├──────────────┤          ├──────────────┤             │
+│  │ - user       │          │ - stations   │             │
+│  │ - token      │          │ - loading    │             │
+│  │ - isLoading  │          │ - error      │             │
+│  ├──────────────┤          ├──────────────┤             │
+│  │ + login()    │          │ + fetch()    │             │
+│  │ + logout()   │          │ + getById()  │             │
+│  │ + register() │          │              │             │
+│  └──────────────┘          └──────────────┘             │
+│                                                          │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Storybook
+
+Storybook est utilisé pour le développement isolé des composants :
+
+- **HomeView** : Formulaire de calcul de trajet
+- **StatsView** : Graphiques et tableau de statistiques
+- **LoginView** : Formulaire de connexion
+- **SignupView** : Formulaire d'inscription
+
+Lancement : `make storybook` ou `npm run storybook`
+
 ## CI/CD Pipeline
 
-```
+```text
           LINT          TEST         SECURITY        BUILD
         +------+      +------+      +--------+     +--------+
         | PHPCS|      |PHPUnit|     | PHPStan|     | Docker |
