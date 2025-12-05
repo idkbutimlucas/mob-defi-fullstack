@@ -76,9 +76,7 @@
 
           <div class="text-center">
             <span class="text-body-2">Deja un compte ?</span>
-            <router-link to="/login" class="text-primary ml-1">
-              Se connecter
-            </router-link>
+            <router-link to="/login" class="text-primary ml-1"> Se connecter </router-link>
           </div>
         </v-card>
       </v-col>
@@ -87,53 +85,53 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
+  import { ref } from 'vue'
+  import { useRouter } from 'vue-router'
+  import { useAuthStore } from '@/stores/auth'
 
-const router = useRouter()
-const authStore = useAuthStore()
+  const router = useRouter()
+  const authStore = useAuthStore()
 
-const username = ref('')
-const email = ref('')
-const password = ref('')
-const confirmPassword = ref('')
-const showPassword = ref(false)
-const error = ref<string | null>(null)
-const fieldErrors = ref<Record<string, string> | null>(null)
+  const username = ref('')
+  const email = ref('')
+  const password = ref('')
+  const confirmPassword = ref('')
+  const showPassword = ref(false)
+  const error = ref<string | null>(null)
+  const fieldErrors = ref<Record<string, string> | null>(null)
 
-const rules = {
-  required: (v: string) => !!v || 'Ce champ est requis',
-  minLength: (min: number) => (v: string) => v.length >= min || `Minimum ${min} caracteres`,
-  email: (v: string) => /.+@.+\..+/.test(v) || 'Email invalide',
-  passwordMatch: (v: string) => v === password.value || 'Les mots de passe ne correspondent pas',
-}
+  const rules = {
+    required: (v: string) => !!v || 'Ce champ est requis',
+    minLength: (min: number) => (v: string) => v.length >= min || `Minimum ${min} caracteres`,
+    email: (v: string) => /.+@.+\..+/.test(v) || 'Email invalide',
+    passwordMatch: (v: string) => v === password.value || 'Les mots de passe ne correspondent pas',
+  }
 
-async function handleSignup() {
-  error.value = null
-  fieldErrors.value = null
+  async function handleSignup() {
+    error.value = null
+    fieldErrors.value = null
 
-  try {
-    await authStore.register({
-      username: username.value,
-      email: email.value,
-      password: password.value,
-    })
-    router.push('/')
-  } catch (e) {
-    if (e instanceof Error) {
-      // Try to parse field errors from the message
-      try {
-        const parsed = JSON.parse(e.message)
-        if (parsed.errors) {
-          fieldErrors.value = parsed.errors
-          return
+    try {
+      await authStore.register({
+        username: username.value,
+        email: email.value,
+        password: password.value,
+      })
+      router.push('/')
+    } catch (e) {
+      if (e instanceof Error) {
+        // Try to parse field errors from the message
+        try {
+          const parsed = JSON.parse(e.message)
+          if (parsed.errors) {
+            fieldErrors.value = parsed.errors
+            return
+          }
+        } catch {
+          // Not JSON, use as regular error
         }
-      } catch {
-        // Not JSON, use as regular error
+        error.value = e.message
       }
-      error.value = e.message
     }
   }
-}
 </script>

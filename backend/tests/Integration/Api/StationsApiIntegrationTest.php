@@ -34,8 +34,7 @@ class StationsApiIntegrationTest extends WebTestCase
 
         foreach ($data as $station) {
             $this->assertArrayHasKey('id', $station);
-            $this->assertArrayHasKey('shortName', $station);
-            $this->assertArrayHasKey('longName', $station);
+            $this->assertArrayHasKey('name', $station);
         }
     }
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Integration\Persistence;
 
 use App\Routing\Infrastructure\Persistence\JsonNetworkLoader;
+use App\Shared\Domain\StationId;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -18,7 +19,10 @@ class JsonNetworkLoaderIntegrationTest extends TestCase
     protected function setUp(): void
     {
         $this->dataPath = dirname(__DIR__, 3) . '/../data';
-        $this->loader = new JsonNetworkLoader($this->dataPath);
+        $this->loader = new JsonNetworkLoader(
+            $this->dataPath . '/stations.json',
+            $this->dataPath . '/distances.json'
+        );
     }
 
     public function testItLoadsRealStationsFile(): void
@@ -26,9 +30,9 @@ class JsonNetworkLoaderIntegrationTest extends TestCase
         $network = $this->loader->load();
 
         // Verify some known stations exist
-        $this->assertTrue($network->hasStation('MX'), 'Montreux station should exist');
-        $this->assertTrue($network->hasStation('ZW'), 'Zweisimmen station should exist');
-        $this->assertTrue($network->hasStation('VV'), 'Vevey station should exist');
+        $this->assertTrue($network->hasStation(StationId::fromString('MX')), 'Montreux station should exist');
+        $this->assertTrue($network->hasStation(StationId::fromString('ZW')), 'Zweisimmen station should exist');
+        $this->assertTrue($network->hasStation(StationId::fromString('VV')), 'Vevey station should exist');
     }
 
     public function testItLoadsAllStationsFromFile(): void
@@ -44,9 +48,8 @@ class JsonNetworkLoaderIntegrationTest extends TestCase
     {
         $network = $this->loader->load();
 
-        $montreux = $network->getStation('MX');
-        $this->assertNotNull($montreux);
-        $this->assertStringContainsString('Montreux', $montreux->longName());
+        $montreux = $network->getStation(StationId::fromString('MX'));
+        $this->assertStringContainsString('Montreux', $montreux->name());
     }
 
     public function testItCreatesBidirectionalConnections(): void
@@ -59,12 +62,17 @@ class JsonNetworkLoaderIntegrationTest extends TestCase
         foreach ($stationIds as $stationId) {
             $neighbors = $network->getNeighbors($stationId);
 
-            foreach ($neighbors as $neighborId) {
-                $reverseNeighbors = $network->getNeighbors($neighborId);
+            foreach ($neighbors as $neighbor) {
+                $neighborStationId = $neighbor->stationId();
+                $reverseNeighbors = $network->getNeighbors($neighborStationId);
+                $reverseNeighborIds = array_map(
+                    fn($n) => $n->stationId()->value(),
+                    $reverseNeighbors
+                );
                 $this->assertContains(
-                    $stationId,
-                    $reverseNeighbors,
-                    "If $stationId connects to $neighborId, $neighborId should connect back"
+                    $stationId->value(),
+                    $reverseNeighborIds,
+                    "If {$stationId->value()} connects to {$neighborStationId->value()}, it should connect back"
                 );
             }
         }
@@ -78,10 +86,10 @@ class JsonNetworkLoaderIntegrationTest extends TestCase
         foreach ($stationIds as $stationId) {
             $neighbors = $network->getNeighbors($stationId);
 
-            foreach ($neighbors as $neighborId) {
-                $distance = $network->getDirectDistance($stationId, $neighborId);
+            foreach ($neighbors as $neighbor) {
+                $distance = $network->getDirectDistance($stationId, $neighbor->stationId());
                 $this->assertNotNull($distance);
-                $this->assertGreaterThan(0, $distance->kilometers());
+                $this->assertGreaterThan(0, $distance->value());
             }
         }
     }
@@ -94,8 +102,9 @@ class JsonNetworkLoaderIntegrationTest extends TestCase
         $mobStations = ['MX', 'CL', 'LR', 'CD', 'GM', 'MSB', 'CH', 'RD', 'GD', 'ZW'];
 
         foreach ($mobStations as $station) {
-            if ($network->hasStation($station)) {
-                $neighbors = $network->getNeighbors($station);
+            $stationId = StationId::fromString($station);
+            if ($network->hasStation($stationId)) {
+                $neighbors = $network->getNeighbors($stationId);
                 $this->assertNotEmpty(
                     $neighbors,
                     "Station $station should have at least one neighbor"

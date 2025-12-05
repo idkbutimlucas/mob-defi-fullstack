@@ -20,7 +20,10 @@ class DijkstraPathFinderIntegrationTest extends TestCase
     protected function setUp(): void
     {
         $dataPath = dirname(__DIR__, 3) . '/../data';
-        $this->loader = new JsonNetworkLoader($dataPath);
+        $this->loader = new JsonNetworkLoader(
+            $dataPath . '/stations.json',
+            $dataPath . '/distances.json'
+        );
         $this->pathFinder = new DijkstraPathFinder();
     }
 
@@ -28,38 +31,39 @@ class DijkstraPathFinderIntegrationTest extends TestCase
     {
         $network = $this->loader->load();
 
-        $path = $this->pathFinder->findShortestPath(
+        $path = $this->pathFinder->findPath(
             $network,
             StationId::fromString('MX'),
             StationId::fromString('ZW')
         );
 
         $this->assertNotNull($path);
-        $this->assertEquals('MX', $path->stations()[0]->value());
-        $this->assertEquals('ZW', $path->stations()[count($path->stations()) - 1]->value());
-        $this->assertGreaterThan(0, $path->totalDistance()->kilometers());
+        $this->assertEquals('MX', $path->start()->value());
+        $this->assertEquals('ZW', $path->end()->value());
+        $this->assertGreaterThan(0, $path->totalDistance()->value());
     }
 
     public function testItFindsPathInReverseDirection(): void
     {
         $network = $this->loader->load();
 
-        $pathForward = $this->pathFinder->findShortestPath(
+        $pathForward = $this->pathFinder->findPath(
             $network,
             StationId::fromString('MX'),
             StationId::fromString('ZW')
         );
 
-        $pathBackward = $this->pathFinder->findShortestPath(
+        $pathBackward = $this->pathFinder->findPath(
             $network,
             StationId::fromString('ZW'),
             StationId::fromString('MX')
         );
 
-        // Distance should be the same in both directions
-        $this->assertEquals(
-            $pathForward->totalDistance()->kilometers(),
-            $pathBackward->totalDistance()->kilometers()
+        // Distance should be the same in both directions (with delta for float precision)
+        $this->assertEqualsWithDelta(
+            $pathForward->totalDistance()->value(),
+            $pathBackward->totalDistance()->value(),
+            0.01
         );
     }
 
@@ -76,30 +80,30 @@ class DijkstraPathFinderIntegrationTest extends TestCase
             $this->markTestSkipped('No adjacent stations found');
         }
 
-        $adjacentStation = $neighbors[0];
+        $adjacentStationId = $neighbors[0]->stationId();
 
-        $path = $this->pathFinder->findShortestPath(
+        $path = $this->pathFinder->findPath(
             $network,
-            StationId::fromString($firstStation),
-            StationId::fromString($adjacentStation)
+            $firstStation,
+            $adjacentStationId
         );
 
         $this->assertCount(2, $path->stations());
-        $this->assertCount(1, $path->segments());
+        $this->assertEquals(1, $path->segmentCount());
     }
 
     public function testItCalculatesReasonableDistanceForFullRoute(): void
     {
         $network = $this->loader->load();
 
-        $path = $this->pathFinder->findShortestPath(
+        $path = $this->pathFinder->findPath(
             $network,
             StationId::fromString('MX'),
             StationId::fromString('ZW')
         );
 
         // The MOB line from Montreux to Zweisimmen is approximately 60-70 km
-        $distance = $path->totalDistance()->kilometers();
+        $distance = $path->totalDistance()->value();
         $this->assertGreaterThan(50, $distance, 'Distance should be more than 50km');
         $this->assertLessThan(100, $distance, 'Distance should be less than 100km');
     }
@@ -108,16 +112,16 @@ class DijkstraPathFinderIntegrationTest extends TestCase
     {
         $network = $this->loader->load();
 
-        $path = $this->pathFinder->findShortestPath(
+        $path = $this->pathFinder->findPath(
             $network,
             StationId::fromString('MX'),
             StationId::fromString('ZW')
         );
 
         // Number of segments should be one less than number of stations
-        $this->assertCount(
-            count($path->stations()) - 1,
-            $path->segments()
+        $this->assertEquals(
+            $path->stationCount() - 1,
+            $path->segmentCount()
         );
     }
 }

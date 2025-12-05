@@ -19,7 +19,7 @@ export const WithError: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Affiche un message d\'erreur après une tentative de connexion échouée.',
+        story: "Affiche un message d'erreur après une tentative de connexion échouée.",
       },
     },
   },

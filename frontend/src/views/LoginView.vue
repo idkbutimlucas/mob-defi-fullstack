@@ -8,7 +8,13 @@
             Connexion
           </v-card-title>
 
-          <v-alert v-if="authStore.error" type="error" class="mb-4" closable @click:close="authStore.clearError()">
+          <v-alert
+            v-if="authStore.error"
+            type="error"
+            class="mb-4"
+            closable
+            @click:close="authStore.clearError()"
+          >
             {{ authStore.error }}
           </v-alert>
 
@@ -48,9 +54,7 @@
 
           <div class="text-center">
             <span class="text-body-2">Pas encore de compte ?</span>
-            <router-link to="/signup" class="text-primary ml-1">
-              Creer un compte
-            </router-link>
+            <router-link to="/signup" class="text-primary ml-1"> Creer un compte </router-link>
           </div>
         </v-card>
       </v-col>
@@ -59,27 +63,27 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
+  import { ref } from 'vue'
+  import { useRouter } from 'vue-router'
+  import { useAuthStore } from '@/stores/auth'
 
-const router = useRouter()
-const authStore = useAuthStore()
+  const router = useRouter()
+  const authStore = useAuthStore()
 
-const username = ref('')
-const password = ref('')
-const showPassword = ref(false)
+  const username = ref('')
+  const password = ref('')
+  const showPassword = ref(false)
 
-const rules = {
-  required: (v: string) => !!v || 'Ce champ est requis',
-}
-
-async function handleLogin() {
-  try {
-    await authStore.login(username.value, password.value)
-    router.push('/')
-  } catch {
-    // Error is handled by the store
+  const rules = {
+    required: (v: string) => !!v || 'Ce champ est requis',
   }
-}
+
+  async function handleLogin() {
+    try {
+      await authStore.login(username.value, password.value)
+      router.push('/')
+    } catch {
+      // Error is handled by the store
+    }
+  }
 </script>
