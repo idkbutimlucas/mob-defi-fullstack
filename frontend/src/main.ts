@@ -8,22 +8,9 @@ import '@mdi/font/css/materialdesignicons.css'
 
 import App from './App.vue'
 import router from './router'
-import { login } from './api/client'
-
-// Auto-login with API credentials
-async function initAuth(): Promise<void> {
-  try {
-    const username = import.meta.env.VITE_API_USERNAME || 'api'
-    const password = import.meta.env.VITE_API_PASSWORD || 'secret'
-    await login(username, password)
-    console.log('API authentication successful')
-  } catch (error) {
-    console.warn('API authentication failed:', error)
-  }
-}
 
 // Theme MOB - Montreux Oberland Bernois
-// Inspiré du site officiel mob.ch
+// Inspire du site officiel mob.ch
 const vuetify = createVuetify({
   theme: {
     defaultTheme: 'mobTheme',
@@ -38,13 +25,13 @@ const vuetify = createVuetify({
           background: '#f1f1f1', // Gris clair
           surface: '#FFFFFF',
 
-          // États
+          // Etats
           error: '#D32F2F',
           info: '#0288D1',
           success: '#228b22', // Vert MOB
           warning: '#F57C00',
 
-          // Personnalisés
+          // Personnalises
           'on-primary': '#FFFFFF',
           'on-secondary': '#FFFFFF',
         },
@@ -92,7 +79,4 @@ app.use(createPinia())
 app.use(router)
 app.use(vuetify)
 
-// Initialize auth then mount app
-initAuth().finally(() => {
-  app.mount('#app')
-})
+app.mount('#app')

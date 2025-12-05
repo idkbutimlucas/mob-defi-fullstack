@@ -31,3 +31,9 @@ services:
 
     App\Analytics\Domain\Repository\RouteRecordRepositoryInterface:
         alias: App\Analytics\Infrastructure\Persistence\DoctrineRouteRecordRepository
+
+    # Auth Services
+    App\Auth\Infrastructure\Persistence\DoctrineUserRepository: ~
+
+    App\Auth\Domain\Repository\UserRepositoryInterface:
+        alias: App\Auth\Infrastructure\Persistence\DoctrineUserRepository

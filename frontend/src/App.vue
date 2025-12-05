@@ -1,14 +1,26 @@
 <script setup lang="ts">
-  import { ref } from 'vue'
-  import { useRoute } from 'vue-router'
+import { ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
-  const drawer = ref(false)
-  const route = useRoute()
+const drawer = ref(false)
+const route = useRoute()
+const router = useRouter()
+const authStore = useAuthStore()
 
-  const navItems = [
-    { title: 'Calculer un trajet', icon: 'mdi-train', to: '/' },
-    { title: 'Statistiques', icon: 'mdi-chart-bar', to: '/stats' },
-  ]
+const navItems = [
+  { title: 'Calculer un trajet', icon: 'mdi-train', to: '/' },
+  { title: 'Statistiques', icon: 'mdi-chart-bar', to: '/stats' },
+]
+
+onMounted(() => {
+  authStore.init()
+})
+
+function handleLogout() {
+  authStore.logout()
+  router.push('/login')
+}
 </script>
 
 <template>
@@ -35,7 +47,7 @@
       <!-- Navigation desktop -->
       <template #default>
         <v-spacer />
-        <div class="d-none d-md-flex">
+        <div class="d-none d-md-flex align-center">
           <v-btn
             v-for="item in navItems"
             :key="item.to"
@@ -48,6 +60,54 @@
             <v-icon start size="small">{{ item.icon }}</v-icon>
             {{ item.title }}
           </v-btn>
+
+          <v-divider vertical class="mx-3 my-4" style="opacity: 0.3" />
+
+          <!-- Auth buttons -->
+          <template v-if="authStore.isAuthenticated">
+            <v-menu>
+              <template #activator="{ props }">
+                <v-btn
+                  v-bind="props"
+                  variant="text"
+                  color="white"
+                  class="nav-btn"
+                >
+                  <v-icon start size="small">mdi-account-circle</v-icon>
+                  {{ authStore.user?.username }}
+                  <v-icon end size="small">mdi-chevron-down</v-icon>
+                </v-btn>
+              </template>
+              <v-list>
+                <v-list-item @click="handleLogout">
+                  <template #prepend>
+                    <v-icon>mdi-logout</v-icon>
+                  </template>
+                  <v-list-item-title>Deconnexion</v-list-item-title>
+                </v-list-item>
+              </v-list>
+            </v-menu>
+          </template>
+          <template v-else>
+            <v-btn
+              to="/login"
+              variant="text"
+              color="white"
+              class="nav-btn"
+            >
+              <v-icon start size="small">mdi-login</v-icon>
+              Connexion
+            </v-btn>
+            <v-btn
+              to="/signup"
+              variant="outlined"
+              color="white"
+              class="nav-btn ml-2"
+            >
+              <v-icon start size="small">mdi-account-plus</v-icon>
+              Inscription
+            </v-btn>
+          </template>
         </div>
       </template>
     </v-app-bar>
@@ -59,6 +119,10 @@
           <span class="logo-text">MOB</span>
         </div>
         <div class="text-body-2 text-white" style="opacity: 0.7">Montreux Oberland Bernois</div>
+        <div v-if="authStore.isAuthenticated" class="text-body-2 text-white mt-2">
+          <v-icon size="small" class="mr-1">mdi-account</v-icon>
+          {{ authStore.user?.username }}
+        </div>
       </div>
 
       <v-list nav class="pa-4">
@@ -71,7 +135,39 @@
           rounded="lg"
           color="accent"
           class="mb-2"
+          @click="drawer = false"
         />
+
+        <v-divider class="my-4" />
+
+        <template v-if="authStore.isAuthenticated">
+          <v-list-item
+            prepend-icon="mdi-logout"
+            title="Deconnexion"
+            rounded="lg"
+            color="error"
+            @click="handleLogout(); drawer = false"
+          />
+        </template>
+        <template v-else>
+          <v-list-item
+            to="/login"
+            prepend-icon="mdi-login"
+            title="Connexion"
+            rounded="lg"
+            color="primary"
+            class="mb-2"
+            @click="drawer = false"
+          />
+          <v-list-item
+            to="/signup"
+            prepend-icon="mdi-account-plus"
+            title="Inscription"
+            rounded="lg"
+            color="accent"
+            @click="drawer = false"
+          />
+        </template>
       </v-list>
     </v-navigation-drawer>
 
@@ -105,51 +201,51 @@
 </template>
 
 <style scoped>
-  .app-header {
-    transition: background-color 0.3s ease;
-  }
+.app-header {
+  transition: background-color 0.3s ease;
+}
 
-  .logo-container {
-    background: #e6007e;
-    padding: 6px 12px;
-  }
+.logo-container {
+  background: #e6007e;
+  padding: 6px 12px;
+}
 
-  .logo-text {
-    font-size: 18px;
-    font-weight: 700;
-    color: white;
-    letter-spacing: 2px;
-  }
+.logo-text {
+  font-size: 18px;
+  font-weight: 700;
+  color: white;
+  letter-spacing: 2px;
+}
 
-  .logo-small {
-    padding: 4px 8px;
-  }
+.logo-small {
+  padding: 4px 8px;
+}
 
-  .logo-text-small {
-    font-size: 14px;
-    font-weight: 700;
-    color: white;
-    letter-spacing: 1px;
-  }
+.logo-text-small {
+  font-size: 14px;
+  font-weight: 700;
+  color: white;
+  letter-spacing: 1px;
+}
 
-  .nav-btn {
-    text-transform: none;
-    font-weight: 500;
-    letter-spacing: 0;
-    transition: all 0.2s ease;
-  }
+.nav-btn {
+  text-transform: none;
+  font-weight: 500;
+  letter-spacing: 0;
+  transition: all 0.2s ease;
+}
 
-  .nav-active {
-    background: rgba(255, 255, 255, 0.1) !important;
-  }
+.nav-active {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
 
-  .main-content {
-    background: #f1f1f1;
-    min-height: 100vh;
-  }
+.main-content {
+  background: #f1f1f1;
+  min-height: 100vh;
+}
 
-  .footer-mob {
-    background: #fff;
-    border-top: 1px solid rgba(0, 0, 0, 0.08);
-  }
+.footer-mob {
+  background: #fff;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
 </style>
