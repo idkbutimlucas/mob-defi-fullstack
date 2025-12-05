@@ -71,7 +71,7 @@ function handleLogout() {
                   v-bind="props"
                   variant="text"
                   color="white"
-                  class="nav-btn"
+                  class="nav-btn mr-4"
                 >
                   <v-icon start size="small">mdi-account-circle</v-icon>
                   {{ authStore.user?.username }}
@@ -102,7 +102,7 @@ function handleLogout() {
               to="/signup"
               variant="outlined"
               color="white"
-              class="nav-btn ml-2"
+              class="nav-btn ml-2 mr-4"
             >
               <v-icon start size="small">mdi-account-plus</v-icon>
               Inscription
