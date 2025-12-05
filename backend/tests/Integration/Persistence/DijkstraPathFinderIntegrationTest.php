@@ -59,10 +59,11 @@ class DijkstraPathFinderIntegrationTest extends TestCase
             StationId::fromString('MX')
         );
 
-        // Distance should be the same in both directions
-        $this->assertEquals(
+        // Distance should be the same in both directions (with delta for float precision)
+        $this->assertEqualsWithDelta(
             $pathForward->totalDistance()->value(),
-            $pathBackward->totalDistance()->value()
+            $pathBackward->totalDistance()->value(),
+            0.01
         );
     }
 
