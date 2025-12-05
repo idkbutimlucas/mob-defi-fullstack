@@ -118,6 +118,7 @@
         <v-divider class="my-4" />
 
         <template v-if="authStore.isAuthenticated">
+          <!-- prettier-ignore -->
           <v-list-item
             prepend-icon="mdi-logout"
             title="Deconnexion"
