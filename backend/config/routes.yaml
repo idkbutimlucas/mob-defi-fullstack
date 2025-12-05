@@ -3,3 +3,8 @@ controllers:
         path: ../src/
         namespace: App
     type: attribute
+
+# JWT Authentication login route
+api_login:
+    path: /api/v1/login
+    methods: [POST]
