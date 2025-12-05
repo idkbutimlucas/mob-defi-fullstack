@@ -123,10 +123,7 @@
             title="Deconnexion"
             rounded="lg"
             color="error"
-            @click="
-              handleLogout()
-              drawer = false
-            "
+            @click="handleLogout(); drawer = false"
           />
         </template>
         <template v-else>
