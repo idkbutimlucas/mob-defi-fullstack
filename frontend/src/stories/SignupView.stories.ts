@@ -17,7 +17,7 @@ export const Default: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Formulaire d\'inscription par défaut.',
+        story: "Formulaire d'inscription par défaut.",
       },
     },
   },
@@ -47,7 +47,7 @@ export const Loading: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'État de chargement pendant l\'inscription.',
+        story: "État de chargement pendant l'inscription.",
       },
     },
   },

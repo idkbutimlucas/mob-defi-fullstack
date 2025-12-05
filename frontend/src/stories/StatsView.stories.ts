@@ -111,7 +111,7 @@ export const Empty: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Message affiché quand aucune statistique n\'est disponible.',
+        story: "Message affiché quand aucune statistique n'est disponible.",
       },
     },
   },

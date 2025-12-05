@@ -1,26 +1,26 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
+  import { ref, onMounted } from 'vue'
+  import { useRoute, useRouter } from 'vue-router'
+  import { useAuthStore } from '@/stores/auth'
 
-const drawer = ref(false)
-const route = useRoute()
-const router = useRouter()
-const authStore = useAuthStore()
+  const drawer = ref(false)
+  const route = useRoute()
+  const router = useRouter()
+  const authStore = useAuthStore()
 
-const navItems = [
-  { title: 'Calculer un trajet', icon: 'mdi-train', to: '/' },
-  { title: 'Statistiques', icon: 'mdi-chart-bar', to: '/stats' },
-]
+  const navItems = [
+    { title: 'Calculer un trajet', icon: 'mdi-train', to: '/' },
+    { title: 'Statistiques', icon: 'mdi-chart-bar', to: '/stats' },
+  ]
 
-onMounted(() => {
-  authStore.init()
-})
+  onMounted(() => {
+    authStore.init()
+  })
 
-function handleLogout() {
-  authStore.logout()
-  router.push('/login')
-}
+  function handleLogout() {
+    authStore.logout()
+    router.push('/login')
+  }
 </script>
 
 <template>
@@ -62,22 +62,14 @@ function handleLogout() {
           <template v-if="authStore.isAuthenticated">
             <v-menu offset="14" content-class="rounded-0">
               <template #activator="{ props }">
-                <v-btn
-                  v-bind="props"
-                  variant="text"
-                  color="white"
-                  class="nav-btn mr-4"
-                >
+                <v-btn v-bind="props" variant="text" color="white" class="nav-btn mr-4">
                   <v-icon start size="small">mdi-account-circle</v-icon>
                   {{ authStore.user?.username }}
                   <v-icon end size="small">mdi-chevron-down</v-icon>
                 </v-btn>
               </template>
               <v-list class="pa-0 rounded-0" min-width="200">
-                <v-list-item
-                  @click="handleLogout"
-                  class="logout-item"
-                >
+                <v-list-item @click="handleLogout" class="logout-item">
                   <template #prepend>
                     <v-icon color="error">mdi-logout</v-icon>
                   </template>
@@ -87,21 +79,11 @@ function handleLogout() {
             </v-menu>
           </template>
           <template v-else>
-            <v-btn
-              to="/login"
-              variant="text"
-              color="white"
-              class="nav-btn"
-            >
+            <v-btn to="/login" variant="text" color="white" class="nav-btn">
               <v-icon start size="small">mdi-login</v-icon>
               Connexion
             </v-btn>
-            <v-btn
-              to="/signup"
-              variant="outlined"
-              color="white"
-              class="nav-btn ml-2 mr-4"
-            >
+            <v-btn to="/signup" variant="outlined" color="white" class="nav-btn ml-2 mr-4">
               <v-icon start size="small">mdi-account-plus</v-icon>
               Inscription
             </v-btn>
@@ -141,7 +123,10 @@ function handleLogout() {
             title="Deconnexion"
             rounded="lg"
             color="error"
-            @click="handleLogout(); drawer = false"
+            @click="
+              handleLogout()
+              drawer = false
+            "
           />
         </template>
         <template v-else>
@@ -194,47 +179,47 @@ function handleLogout() {
 </template>
 
 <style scoped>
-.app-header {
-  transition: background-color 0.3s ease;
-}
+  .app-header {
+    transition: background-color 0.3s ease;
+  }
 
-.logo-img {
-  height: 32px;
-  width: auto;
-}
+  .logo-img {
+    height: 32px;
+    width: auto;
+  }
 
-.logo-img-drawer {
-  height: 28px;
-  width: auto;
-}
+  .logo-img-drawer {
+    height: 28px;
+    width: auto;
+  }
 
-.logo-img-footer {
-  height: 24px;
-  width: auto;
-}
+  .logo-img-footer {
+    height: 24px;
+    width: auto;
+  }
 
-.nav-btn {
-  text-transform: none;
-  font-weight: 500;
-  letter-spacing: 0;
-  transition: all 0.2s ease;
-}
+  .nav-btn {
+    text-transform: none;
+    font-weight: 500;
+    letter-spacing: 0;
+    transition: all 0.2s ease;
+  }
 
-.nav-active {
-  background: rgba(255, 255, 255, 0.1) !important;
-}
+  .nav-active {
+    background: rgba(255, 255, 255, 0.1) !important;
+  }
 
-.main-content {
-  background: #f1f1f1;
-  min-height: 100vh;
-}
+  .main-content {
+    background: #f1f1f1;
+    min-height: 100vh;
+  }
 
-.footer-mob {
-  background: #fff;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
-}
+  .footer-mob {
+    background: #fff;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+  }
 
-.logout-item:hover {
-  background: rgba(211, 47, 47, 0.08) !important;
-}
+  .logout-item:hover {
+    background: rgba(211, 47, 47, 0.08) !important;
+  }
 </style>

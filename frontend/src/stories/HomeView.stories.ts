@@ -78,7 +78,7 @@ export const WithError: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Affichage d\'un message d\'erreur en cas de problème.',
+        story: "Affichage d'un message d'erreur en cas de problème.",
       },
     },
   },
