@@ -31,15 +31,15 @@ class DijkstraPathFinderIntegrationTest extends TestCase
     {
         $network = $this->loader->load();
 
-        $path = $this->pathFinder->findShortestPath(
+        $path = $this->pathFinder->findPath(
             $network,
             StationId::fromString('MX'),
             StationId::fromString('ZW')
         );
 
         $this->assertNotNull($path);
-        $this->assertEquals('MX', $path->stations()[0]->value());
-        $this->assertEquals('ZW', $path->stations()[count($path->stations()) - 1]->value());
+        $this->assertEquals('MX', $path->start()->value());
+        $this->assertEquals('ZW', $path->end()->value());
         $this->assertGreaterThan(0, $path->totalDistance()->kilometers());
     }
 
@@ -47,13 +47,13 @@ class DijkstraPathFinderIntegrationTest extends TestCase
     {
         $network = $this->loader->load();
 
-        $pathForward = $this->pathFinder->findShortestPath(
+        $pathForward = $this->pathFinder->findPath(
             $network,
             StationId::fromString('MX'),
             StationId::fromString('ZW')
         );
 
-        $pathBackward = $this->pathFinder->findShortestPath(
+        $pathBackward = $this->pathFinder->findPath(
             $network,
             StationId::fromString('ZW'),
             StationId::fromString('MX')
@@ -79,23 +79,23 @@ class DijkstraPathFinderIntegrationTest extends TestCase
             $this->markTestSkipped('No adjacent stations found');
         }
 
-        $adjacentStation = $neighbors[0];
+        $adjacentStationId = $neighbors[0]->stationId();
 
-        $path = $this->pathFinder->findShortestPath(
+        $path = $this->pathFinder->findPath(
             $network,
-            StationId::fromString($firstStation),
-            StationId::fromString($adjacentStation)
+            $firstStation,
+            $adjacentStationId
         );
 
         $this->assertCount(2, $path->stations());
-        $this->assertCount(1, $path->segments());
+        $this->assertEquals(1, $path->segmentCount());
     }
 
     public function testItCalculatesReasonableDistanceForFullRoute(): void
     {
         $network = $this->loader->load();
 
-        $path = $this->pathFinder->findShortestPath(
+        $path = $this->pathFinder->findPath(
             $network,
             StationId::fromString('MX'),
             StationId::fromString('ZW')
@@ -111,16 +111,16 @@ class DijkstraPathFinderIntegrationTest extends TestCase
     {
         $network = $this->loader->load();
 
-        $path = $this->pathFinder->findShortestPath(
+        $path = $this->pathFinder->findPath(
             $network,
             StationId::fromString('MX'),
             StationId::fromString('ZW')
         );
 
         // Number of segments should be one less than number of stations
-        $this->assertCount(
-            count($path->stations()) - 1,
-            $path->segments()
+        $this->assertEquals(
+            $path->stationCount() - 1,
+            $path->segmentCount()
         );
     }
 }
