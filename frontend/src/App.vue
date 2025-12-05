@@ -35,12 +35,7 @@ function handleLogout() {
           class="d-md-none"
         />
         <div class="d-flex align-center ml-4">
-          <div class="logo-container mr-3">
-            <span class="logo-text">MOB</span>
-          </div>
-          <div class="d-none d-sm-block">
-            <div class="text-body-2 text-white" style="opacity: 0.7">Montreux Oberland Bernois</div>
-          </div>
+          <img src="/images/logo-mob.svg" alt="MOB" class="logo-img" />
         </div>
       </template>
 
@@ -65,7 +60,7 @@ function handleLogout() {
 
           <!-- Auth buttons -->
           <template v-if="authStore.isAuthenticated">
-            <v-menu>
+            <v-menu offset="14" content-class="rounded-0">
               <template #activator="{ props }">
                 <v-btn
                   v-bind="props"
@@ -78,12 +73,15 @@ function handleLogout() {
                   <v-icon end size="small">mdi-chevron-down</v-icon>
                 </v-btn>
               </template>
-              <v-list>
-                <v-list-item @click="handleLogout">
+              <v-list class="pa-0 rounded-0" min-width="200">
+                <v-list-item
+                  @click="handleLogout"
+                  class="logout-item"
+                >
                   <template #prepend>
-                    <v-icon>mdi-logout</v-icon>
+                    <v-icon color="error">mdi-logout</v-icon>
                   </template>
-                  <v-list-item-title>Deconnexion</v-list-item-title>
+                  <v-list-item-title class="font-weight-medium">Deconnexion</v-list-item-title>
                 </v-list-item>
               </v-list>
             </v-menu>
@@ -115,10 +113,7 @@ function handleLogout() {
     <!-- Navigation drawer mobile -->
     <v-navigation-drawer v-model="drawer" temporary>
       <div class="pa-6 bg-primary">
-        <div class="logo-container mb-2">
-          <span class="logo-text">MOB</span>
-        </div>
-        <div class="text-body-2 text-white" style="opacity: 0.7">Montreux Oberland Bernois</div>
+        <img src="/images/logo-mob.svg" alt="MOB" class="logo-img-drawer mb-2" />
         <div v-if="authStore.isAuthenticated" class="text-body-2 text-white mt-2">
           <v-icon size="small" class="mr-1">mdi-account</v-icon>
           {{ authStore.user?.username }}
@@ -183,9 +178,7 @@ function handleLogout() {
       <v-container style="max-width: 1000px">
         <div class="d-flex flex-column flex-md-row align-center justify-space-between">
           <div class="d-flex align-center mb-4 mb-md-0">
-            <div class="logo-container logo-small mr-3">
-              <span class="logo-text-small">MOB</span>
-            </div>
+            <img src="/images/logo-mob-dark.svg" alt="MOB" class="logo-img-footer mr-3" />
             <div>
               <div class="text-body-2 font-weight-medium">MOB - GoldenPass</div>
               <div class="text-caption text-medium-emphasis">
@@ -205,27 +198,19 @@ function handleLogout() {
   transition: background-color 0.3s ease;
 }
 
-.logo-container {
-  background: #e6007e;
-  padding: 6px 12px;
+.logo-img {
+  height: 32px;
+  width: auto;
 }
 
-.logo-text {
-  font-size: 18px;
-  font-weight: 700;
-  color: white;
-  letter-spacing: 2px;
+.logo-img-drawer {
+  height: 28px;
+  width: auto;
 }
 
-.logo-small {
-  padding: 4px 8px;
-}
-
-.logo-text-small {
-  font-size: 14px;
-  font-weight: 700;
-  color: white;
-  letter-spacing: 1px;
+.logo-img-footer {
+  height: 24px;
+  width: auto;
 }
 
 .nav-btn {
@@ -247,5 +232,9 @@ function handleLogout() {
 .footer-mob {
   background: #fff;
   border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.logout-item:hover {
+  background: rgba(211, 47, 47, 0.08) !important;
 }
 </style>
