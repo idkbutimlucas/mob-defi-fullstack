@@ -20,7 +20,10 @@ class DijkstraPathFinderIntegrationTest extends TestCase
     protected function setUp(): void
     {
         $dataPath = dirname(__DIR__, 3) . '/../data';
-        $this->loader = new JsonNetworkLoader($dataPath);
+        $this->loader = new JsonNetworkLoader(
+            $dataPath . '/stations.json',
+            $dataPath . '/distances.json'
+        );
         $this->pathFinder = new DijkstraPathFinder();
     }
 

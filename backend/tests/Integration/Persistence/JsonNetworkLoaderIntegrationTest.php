@@ -18,7 +18,10 @@ class JsonNetworkLoaderIntegrationTest extends TestCase
     protected function setUp(): void
     {
         $this->dataPath = dirname(__DIR__, 3) . '/../data';
-        $this->loader = new JsonNetworkLoader($this->dataPath);
+        $this->loader = new JsonNetworkLoader(
+            $this->dataPath . '/stations.json',
+            $this->dataPath . '/distances.json'
+        );
     }
 
     public function testItLoadsRealStationsFile(): void
