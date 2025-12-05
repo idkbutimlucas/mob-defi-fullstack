@@ -49,7 +49,7 @@ class JsonNetworkLoaderIntegrationTest extends TestCase
         $network = $this->loader->load();
 
         $montreux = $network->getStation(StationId::fromString('MX'));
-        $this->assertStringContainsString('Montreux', $montreux->longName());
+        $this->assertStringContainsString('Montreux', $montreux->name());
     }
 
     public function testItCreatesBidirectionalConnections(): void
@@ -89,7 +89,7 @@ class JsonNetworkLoaderIntegrationTest extends TestCase
             foreach ($neighbors as $neighbor) {
                 $distance = $network->getDirectDistance($stationId, $neighbor->stationId());
                 $this->assertNotNull($distance);
-                $this->assertGreaterThan(0, $distance->kilometers());
+                $this->assertGreaterThan(0, $distance->value());
             }
         }
     }

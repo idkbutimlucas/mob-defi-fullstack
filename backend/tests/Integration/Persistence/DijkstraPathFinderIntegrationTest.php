@@ -40,7 +40,7 @@ class DijkstraPathFinderIntegrationTest extends TestCase
         $this->assertNotNull($path);
         $this->assertEquals('MX', $path->start()->value());
         $this->assertEquals('ZW', $path->end()->value());
-        $this->assertGreaterThan(0, $path->totalDistance()->kilometers());
+        $this->assertGreaterThan(0, $path->totalDistance()->value());
     }
 
     public function testItFindsPathInReverseDirection(): void
@@ -61,8 +61,8 @@ class DijkstraPathFinderIntegrationTest extends TestCase
 
         // Distance should be the same in both directions
         $this->assertEquals(
-            $pathForward->totalDistance()->kilometers(),
-            $pathBackward->totalDistance()->kilometers()
+            $pathForward->totalDistance()->value(),
+            $pathBackward->totalDistance()->value()
         );
     }
 
@@ -102,7 +102,7 @@ class DijkstraPathFinderIntegrationTest extends TestCase
         );
 
         // The MOB line from Montreux to Zweisimmen is approximately 60-70 km
-        $distance = $path->totalDistance()->kilometers();
+        $distance = $path->totalDistance()->value();
         $this->assertGreaterThan(50, $distance, 'Distance should be more than 50km');
         $this->assertLessThan(100, $distance, 'Distance should be less than 100km');
     }
