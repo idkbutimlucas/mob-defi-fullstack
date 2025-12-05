@@ -1,11 +1,32 @@
 import type { Meta, StoryObj } from '@storybook/vue3'
 import StatsView from '../views/StatsView.vue'
 
+/**
+ * Page de statistiques affichant les distances parcourues par code analytique.
+ *
+ * ## Fonctionnalités
+ * - KPIs : distance totale, nombre d'enregistrements, codes uniques
+ * - Filtrage par période (date de début/fin)
+ * - Groupement par jour, mois ou année
+ * - Visualisation en graphique à barres, camembert ou tableau
+ *
+ * ## Codes analytiques
+ * - **PASSENGER** : Trajets passagers
+ * - **FREIGHT** : Transport de marchandises
+ * - **MAINTENANCE** : Trajets de maintenance
+ * - **SERVICE** : Trajets de service
+ */
 const meta = {
   title: 'Views/StatsView',
   component: StatsView,
   parameters: {
     layout: 'fullscreen',
+    docs: {
+      description: {
+        component:
+          'Tableau de bord des statistiques de distances parcourues, agrégées par code analytique.',
+      },
+    },
   },
   tags: ['autodocs'],
 } satisfies Meta<typeof StatsView>
@@ -13,69 +34,85 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const Default: Story = {}
-
-export const WithData: Story = {
+/**
+ * Affichage par défaut avec les données mockées.
+ * Montre les KPIs, les filtres et les graphiques.
+ */
+export const Default: Story = {
   parameters: {
-    mockData: [
-      {
-        url: '/api/v1/stats/distances',
-        method: 'GET',
-        status: 200,
-        response: {
-          from: null,
-          to: null,
-          groupBy: 'none',
-          items: [
-            { analyticCode: 'PASSENGER', totalDistanceKm: 1250.5 },
-            { analyticCode: 'FREIGHT', totalDistanceKm: 450.2 },
-            { analyticCode: 'MAINTENANCE', totalDistanceKm: 125.0 },
-          ],
-        },
+    docs: {
+      description: {
+        story: 'Vue par défaut avec des données de statistiques.',
       },
-    ],
+    },
   },
 }
 
-export const GroupedByMonth: Story = {
+/**
+ * Vue avec le graphique à barres sélectionné.
+ * Idéal pour comparer les distances entre codes analytiques.
+ */
+export const BarChart: Story = {
   parameters: {
-    mockData: [
-      {
-        url: '/api/v1/stats/distances',
-        method: 'GET',
-        status: 200,
-        response: {
-          from: '2025-01-01',
-          to: '2025-03-31',
-          groupBy: 'month',
-          items: [
-            { analyticCode: 'PASSENGER', totalDistanceKm: 420.5, group: '2025-01' },
-            { analyticCode: 'PASSENGER', totalDistanceKm: 380.0, group: '2025-02' },
-            { analyticCode: 'PASSENGER', totalDistanceKm: 450.0, group: '2025-03' },
-            { analyticCode: 'FREIGHT', totalDistanceKm: 150.2, group: '2025-01' },
-            { analyticCode: 'FREIGHT', totalDistanceKm: 160.0, group: '2025-02' },
-            { analyticCode: 'FREIGHT', totalDistanceKm: 140.0, group: '2025-03' },
-          ],
-        },
+    docs: {
+      description: {
+        story: 'Graphique à barres comparant les distances par code analytique.',
       },
-    ],
+    },
   },
 }
 
+/**
+ * Vue avec le graphique en camembert (répartition).
+ * Montre la proportion de chaque code analytique.
+ */
+export const DoughnutChart: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: 'Graphique circulaire montrant la répartition des distances.',
+      },
+    },
+  },
+}
+
+/**
+ * Vue tableau avec toutes les données détaillées.
+ * Affiche le code, la distance et le pourcentage.
+ */
+export const TableView: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: 'Tableau détaillé avec distances et pourcentages.',
+      },
+    },
+  },
+}
+
+/**
+ * État de chargement pendant la récupération des données.
+ */
+export const Loading: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: 'Barre de progression pendant le chargement.',
+      },
+    },
+  },
+}
+
+/**
+ * État vide quand aucune donnée n'est disponible.
+ * Invite l'utilisateur à calculer des trajets.
+ */
 export const Empty: Story = {
   parameters: {
-    mockData: [
-      {
-        url: '/api/v1/stats/distances',
-        method: 'GET',
-        status: 200,
-        response: {
-          from: null,
-          to: null,
-          groupBy: 'none',
-          items: [],
-        },
+    docs: {
+      description: {
+        story: 'Message affiché quand aucune statistique n\'est disponible.',
       },
-    ],
+    },
   },
 }
