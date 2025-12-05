@@ -1,0 +1,106 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Tests\Integration\Persistence;
+
+use App\Routing\Infrastructure\Persistence\JsonNetworkLoader;
+use PHPUnit\Framework\TestCase;
+
+/**
+ * Integration tests for JsonNetworkLoader with real data files.
+ */
+class JsonNetworkLoaderIntegrationTest extends TestCase
+{
+    private JsonNetworkLoader $loader;
+    private string $dataPath;
+
+    protected function setUp(): void
+    {
+        $this->dataPath = dirname(__DIR__, 3) . '/../data';
+        $this->loader = new JsonNetworkLoader($this->dataPath);
+    }
+
+    public function testItLoadsRealStationsFile(): void
+    {
+        $network = $this->loader->load();
+
+        // Verify some known stations exist
+        $this->assertTrue($network->hasStation('MX'), 'Montreux station should exist');
+        $this->assertTrue($network->hasStation('ZW'), 'Zweisimmen station should exist');
+        $this->assertTrue($network->hasStation('VV'), 'Vevey station should exist');
+    }
+
+    public function testItLoadsAllStationsFromFile(): void
+    {
+        $network = $this->loader->load();
+        $stationIds = $network->getAllStationIds();
+
+        // The network should have a reasonable number of stations
+        $this->assertGreaterThan(10, count($stationIds), 'Network should have more than 10 stations');
+    }
+
+    public function testItLoadsStationNamesCorrectly(): void
+    {
+        $network = $this->loader->load();
+
+        $montreux = $network->getStation('MX');
+        $this->assertNotNull($montreux);
+        $this->assertStringContainsString('Montreux', $montreux->longName());
+    }
+
+    public function testItCreatesBidirectionalConnections(): void
+    {
+        $network = $this->loader->load();
+
+        // If A connects to B, B should connect to A
+        $stationIds = $network->getAllStationIds();
+
+        foreach ($stationIds as $stationId) {
+            $neighbors = $network->getNeighbors($stationId);
+
+            foreach ($neighbors as $neighborId) {
+                $reverseNeighbors = $network->getNeighbors($neighborId);
+                $this->assertContains(
+                    $stationId,
+                    $reverseNeighbors,
+                    "If $stationId connects to $neighborId, $neighborId should connect back"
+                );
+            }
+        }
+    }
+
+    public function testItLoadsDistancesAsPositiveValues(): void
+    {
+        $network = $this->loader->load();
+        $stationIds = $network->getAllStationIds();
+
+        foreach ($stationIds as $stationId) {
+            $neighbors = $network->getNeighbors($stationId);
+
+            foreach ($neighbors as $neighborId) {
+                $distance = $network->getDirectDistance($stationId, $neighborId);
+                $this->assertNotNull($distance);
+                $this->assertGreaterThan(0, $distance->kilometers());
+            }
+        }
+    }
+
+    public function testMobLineStationsAreConnected(): void
+    {
+        $network = $this->loader->load();
+
+        // MOB line key stations should be connected
+        $mobStations = ['MX', 'CL', 'LR', 'CD', 'GM', 'MSB', 'CH', 'RD', 'GD', 'ZW'];
+
+        foreach ($mobStations as $station) {
+            if ($network->hasStation($station)) {
+                $neighbors = $network->getNeighbors($station);
+                $this->assertNotEmpty(
+                    $neighbors,
+                    "Station $station should have at least one neighbor"
+                );
+            }
+        }
+    }
+}

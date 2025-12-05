@@ -1,14 +1,26 @@
 <script setup lang="ts">
-  import { ref } from 'vue'
-  import { useRoute } from 'vue-router'
+import { ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
-  const drawer = ref(false)
-  const route = useRoute()
+const drawer = ref(false)
+const route = useRoute()
+const router = useRouter()
+const authStore = useAuthStore()
 
-  const navItems = [
-    { title: 'Calculer un trajet', icon: 'mdi-train', to: '/' },
-    { title: 'Statistiques', icon: 'mdi-chart-bar', to: '/stats' },
-  ]
+const navItems = [
+  { title: 'Calculer un trajet', icon: 'mdi-train', to: '/' },
+  { title: 'Statistiques', icon: 'mdi-chart-bar', to: '/stats' },
+]
+
+onMounted(() => {
+  authStore.init()
+})
+
+function handleLogout() {
+  authStore.logout()
+  router.push('/login')
+}
 </script>
 
 <template>
@@ -23,19 +35,14 @@
           class="d-md-none"
         />
         <div class="d-flex align-center ml-4">
-          <div class="logo-container mr-3">
-            <span class="logo-text">MOB</span>
-          </div>
-          <div class="d-none d-sm-block">
-            <div class="text-body-2 text-white" style="opacity: 0.7">Montreux Oberland Bernois</div>
-          </div>
+          <img src="/images/logo-mob.svg" alt="MOB" class="logo-img" />
         </div>
       </template>
 
       <!-- Navigation desktop -->
       <template #default>
         <v-spacer />
-        <div class="d-none d-md-flex">
+        <div class="d-none d-md-flex align-center">
           <v-btn
             v-for="item in navItems"
             :key="item.to"
@@ -48,6 +55,57 @@
             <v-icon start size="small">{{ item.icon }}</v-icon>
             {{ item.title }}
           </v-btn>
+
+          <v-divider vertical class="mx-3 my-4" style="opacity: 0.3" />
+
+          <!-- Auth buttons -->
+          <template v-if="authStore.isAuthenticated">
+            <v-menu offset="14" content-class="rounded-0">
+              <template #activator="{ props }">
+                <v-btn
+                  v-bind="props"
+                  variant="text"
+                  color="white"
+                  class="nav-btn mr-4"
+                >
+                  <v-icon start size="small">mdi-account-circle</v-icon>
+                  {{ authStore.user?.username }}
+                  <v-icon end size="small">mdi-chevron-down</v-icon>
+                </v-btn>
+              </template>
+              <v-list class="pa-0 rounded-0" min-width="200">
+                <v-list-item
+                  @click="handleLogout"
+                  class="logout-item"
+                >
+                  <template #prepend>
+                    <v-icon color="error">mdi-logout</v-icon>
+                  </template>
+                  <v-list-item-title class="font-weight-medium">Deconnexion</v-list-item-title>
+                </v-list-item>
+              </v-list>
+            </v-menu>
+          </template>
+          <template v-else>
+            <v-btn
+              to="/login"
+              variant="text"
+              color="white"
+              class="nav-btn"
+            >
+              <v-icon start size="small">mdi-login</v-icon>
+              Connexion
+            </v-btn>
+            <v-btn
+              to="/signup"
+              variant="outlined"
+              color="white"
+              class="nav-btn ml-2 mr-4"
+            >
+              <v-icon start size="small">mdi-account-plus</v-icon>
+              Inscription
+            </v-btn>
+          </template>
         </div>
       </template>
     </v-app-bar>
@@ -55,10 +113,11 @@
     <!-- Navigation drawer mobile -->
     <v-navigation-drawer v-model="drawer" temporary>
       <div class="pa-6 bg-primary">
-        <div class="logo-container mb-2">
-          <span class="logo-text">MOB</span>
+        <img src="/images/logo-mob.svg" alt="MOB" class="logo-img-drawer mb-2" />
+        <div v-if="authStore.isAuthenticated" class="text-body-2 text-white mt-2">
+          <v-icon size="small" class="mr-1">mdi-account</v-icon>
+          {{ authStore.user?.username }}
         </div>
-        <div class="text-body-2 text-white" style="opacity: 0.7">Montreux Oberland Bernois</div>
       </div>
 
       <v-list nav class="pa-4">
@@ -71,7 +130,39 @@
           rounded="lg"
           color="accent"
           class="mb-2"
+          @click="drawer = false"
         />
+
+        <v-divider class="my-4" />
+
+        <template v-if="authStore.isAuthenticated">
+          <v-list-item
+            prepend-icon="mdi-logout"
+            title="Deconnexion"
+            rounded="lg"
+            color="error"
+            @click="handleLogout(); drawer = false"
+          />
+        </template>
+        <template v-else>
+          <v-list-item
+            to="/login"
+            prepend-icon="mdi-login"
+            title="Connexion"
+            rounded="lg"
+            color="primary"
+            class="mb-2"
+            @click="drawer = false"
+          />
+          <v-list-item
+            to="/signup"
+            prepend-icon="mdi-account-plus"
+            title="Inscription"
+            rounded="lg"
+            color="accent"
+            @click="drawer = false"
+          />
+        </template>
       </v-list>
     </v-navigation-drawer>
 
@@ -87,9 +178,7 @@
       <v-container style="max-width: 1000px">
         <div class="d-flex flex-column flex-md-row align-center justify-space-between">
           <div class="d-flex align-center mb-4 mb-md-0">
-            <div class="logo-container logo-small mr-3">
-              <span class="logo-text-small">MOB</span>
-            </div>
+            <img src="/images/logo-mob-dark.svg" alt="MOB" class="logo-img-footer mr-3" />
             <div>
               <div class="text-body-2 font-weight-medium">MOB - GoldenPass</div>
               <div class="text-caption text-medium-emphasis">
@@ -105,51 +194,47 @@
 </template>
 
 <style scoped>
-  .app-header {
-    transition: background-color 0.3s ease;
-  }
+.app-header {
+  transition: background-color 0.3s ease;
+}
 
-  .logo-container {
-    background: #e6007e;
-    padding: 6px 12px;
-  }
+.logo-img {
+  height: 32px;
+  width: auto;
+}
 
-  .logo-text {
-    font-size: 18px;
-    font-weight: 700;
-    color: white;
-    letter-spacing: 2px;
-  }
+.logo-img-drawer {
+  height: 28px;
+  width: auto;
+}
 
-  .logo-small {
-    padding: 4px 8px;
-  }
+.logo-img-footer {
+  height: 24px;
+  width: auto;
+}
 
-  .logo-text-small {
-    font-size: 14px;
-    font-weight: 700;
-    color: white;
-    letter-spacing: 1px;
-  }
+.nav-btn {
+  text-transform: none;
+  font-weight: 500;
+  letter-spacing: 0;
+  transition: all 0.2s ease;
+}
 
-  .nav-btn {
-    text-transform: none;
-    font-weight: 500;
-    letter-spacing: 0;
-    transition: all 0.2s ease;
-  }
+.nav-active {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
 
-  .nav-active {
-    background: rgba(255, 255, 255, 0.1) !important;
-  }
+.main-content {
+  background: #f1f1f1;
+  min-height: 100vh;
+}
 
-  .main-content {
-    background: #f1f1f1;
-    min-height: 100vh;
-  }
+.footer-mob {
+  background: #fff;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
 
-  .footer-mob {
-    background: #fff;
-    border-top: 1px solid rgba(0, 0, 0, 0.08);
-  }
+.logout-item:hover {
+  background: rgba(211, 47, 47, 0.08) !important;
+}
 </style>

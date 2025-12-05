@@ -15,12 +15,121 @@ servers:
 security:
   - bearerAuth: []
 tags:
+  - name: Authentication
+    description: Authentification et gestion des utilisateurs
   - name: Routing
     description: Calcul des trajets
   - name: Analytics
     description: Statistiques de distances par code analytique
+  - name: Stations
+    description: Informations sur les stations
 
 paths:
+  /login:
+    post:
+      tags: [Authentication]
+      description: Authentification d'un utilisateur
+      operationId: login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            examples:
+              default:
+                value:
+                  username: "api_user"
+                  password: "secret"
+      responses:
+        '200':
+          description: Authentification reussie
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Identifiants invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /register:
+    post:
+      tags: [Authentication]
+      description: Inscription d'un nouvel utilisateur
+      operationId: register
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            examples:
+              default:
+                value:
+                  username: "john_doe"
+                  email: "john@example.com"
+                  password: "securepassword123"
+      responses:
+        '201':
+          description: Utilisateur cree
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Donnees invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Utilisateur deja existant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /me:
+    get:
+      tags: [Authentication]
+      description: Recuperer les informations de l'utilisateur connecte
+      operationId: getCurrentUser
+      responses:
+        '200':
+          description: Informations utilisateur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Non authentifie
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /stations:
+    get:
+      tags: [Stations]
+      description: Liste de toutes les stations du reseau
+      operationId: getStations
+      security: []
+      responses:
+        '200':
+          description: Liste des stations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Station'
+
+
   /routes:
     post:
       tags: [Routing]
@@ -200,12 +309,82 @@ components:
             $ref: '#/components/schemas/AnalyticDistance'
       required: [items]
 
+    LoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          description: Nom d'utilisateur
+        password:
+          type: string
+          format: password
+          description: Mot de passe
+      required: [username, password]
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT token pour l'authentification
+      required: [token]
+
+    RegisterRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 50
+          description: Nom d'utilisateur (3-50 caracteres)
+        email:
+          type: string
+          format: email
+          description: Adresse email
+        password:
+          type: string
+          format: password
+          minLength: 6
+          description: Mot de passe (minimum 6 caracteres)
+      required: [username, email, password]
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        roles:
+          type: array
+          items:
+            type: string
+      required: [id, username, email, roles]
+
+    Station:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Identifiant court de la station (ex. MX, ZW)
+        shortName:
+          type: string
+          description: Nom court de la station
+        longName:
+          type: string
+          description: Nom complet de la station
+      required: [id, shortName, longName]
+
     Error:
       type: object
       properties:
         code:
           type: string
-          description: Code d’erreur applicatif
+          description: Code d'erreur applicatif
         message:
           type: string
         details:

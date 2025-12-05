@@ -3,13 +3,8 @@ security:
         Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
 
     providers:
-        # Using in-memory provider for simplicity
-        in_memory:
-            memory:
-                users:
-                    api_user:
-                        password: '%env(API_USER_PASSWORD)%'
-                        roles: ['ROLE_API']
+        app_user_provider:
+            id: App\Auth\Infrastructure\Persistence\DoctrineUserRepository
 
     firewalls:
         dev:
@@ -31,16 +26,12 @@ security:
 
     access_control:
         - { path: ^/api/v1/login, roles: PUBLIC_ACCESS }
+        - { path: ^/api/v1/register, roles: PUBLIC_ACCESS }
         - { path: ^/api/v1/stations, roles: PUBLIC_ACCESS }
         - { path: ^/api/v1/routes, roles: ROLE_API }
         - { path: ^/api/v1/stats, roles: ROLE_API }
+        - { path: ^/api/v1/me, roles: ROLE_API }
         - { path: ^/api, roles: ROLE_API }
-
-when@dev:
-    security:
-        password_hashers:
-            Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
-                algorithm: plaintext
 
 when@test:
     security:

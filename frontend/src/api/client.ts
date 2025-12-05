@@ -34,8 +34,43 @@ export interface LoginResponse {
   token: string
 }
 
+export interface User {
+  id: string
+  username: string
+  email: string
+  roles?: string[]
+}
+
+export interface RegisterRequest {
+  username: string
+  email: string
+  password: string
+}
+
+export interface RegisterResponse {
+  message: string
+  user: User
+}
+
+export interface RegisterError {
+  errors: Record<string, string>
+}
+
 export function setAuthToken(token: string | null): void {
   authToken = token
+  if (token) {
+    localStorage.setItem('authToken', token)
+  } else {
+    localStorage.removeItem('authToken')
+  }
+}
+
+export function loadStoredToken(): string | null {
+  const token = localStorage.getItem('authToken')
+  if (token) {
+    authToken = token
+  }
+  return token
 }
 
 export function getAuthToken(): string | null {
@@ -74,8 +109,23 @@ export async function login(username: string, password: string): Promise<string>
     method: 'POST',
     body: JSON.stringify({ username, password }),
   })
-  authToken = response.token
+  setAuthToken(response.token)
   return response.token
+}
+
+export async function register(request: RegisterRequest): Promise<RegisterResponse> {
+  return fetchApi<RegisterResponse>('/register', {
+    method: 'POST',
+    body: JSON.stringify(request),
+  })
+}
+
+export async function getCurrentUser(): Promise<User> {
+  return fetchApi<User>('/me', undefined, true)
+}
+
+export function logout(): void {
+  setAuthToken(null)
 }
 
 export async function getStations(): Promise<Station[]> {
