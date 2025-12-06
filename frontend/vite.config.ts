@@ -32,7 +32,13 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
       include: ['src/**/*.{ts,vue}'],
-      exclude: ['src/main.ts', 'src/vite-env.d.ts', 'src/__tests__/**'],
+      exclude: [
+        'src/main.ts',
+        'src/vite-env.d.ts',
+        'src/__tests__/**',
+        'src/stories/**',
+        'src/router/**',
+      ],
     },
   },
 })

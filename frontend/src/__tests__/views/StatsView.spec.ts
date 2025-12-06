@@ -137,4 +137,103 @@ describe('StatsView', () => {
     expect(wrapper.text()).toContain('Periode')
     expect(wrapper.text()).toContain('2025-01')
   })
+
+  it('should compute chart data correctly', async () => {
+    vi.mocked(api.getStats).mockResolvedValueOnce(mockStatsWithData)
+
+    const wrapper = mount(StatsView)
+    await flushPromises()
+
+    const barChartData = (wrapper.vm as any).barChartData
+    expect(barChartData.labels).toHaveLength(2)
+    expect(barChartData.datasets[0].data).toContain(150.5)
+    expect(barChartData.datasets[0].data).toContain(75.2)
+  })
+
+  it('should compute doughnut chart data correctly', async () => {
+    vi.mocked(api.getStats).mockResolvedValueOnce(mockStatsWithData)
+
+    const wrapper = mount(StatsView)
+    await flushPromises()
+
+    const doughnutData = (wrapper.vm as any).doughnutChartData
+    expect(doughnutData.labels).toContain('PASSENGER')
+    expect(doughnutData.labels).toContain('FREIGHT')
+  })
+
+  it('should return empty chart data when no stats', async () => {
+    vi.mocked(api.getStats).mockResolvedValueOnce(mockStatsEmpty)
+
+    const wrapper = mount(StatsView)
+    await flushPromises()
+
+    const barChartData = (wrapper.vm as any).barChartData
+    expect(barChartData.labels).toHaveLength(0)
+    expect(barChartData.datasets).toHaveLength(0)
+  })
+
+  it('should compute total distance correctly', async () => {
+    vi.mocked(api.getStats).mockResolvedValueOnce(mockStatsWithData)
+
+    const wrapper = mount(StatsView)
+    await flushPromises()
+
+    const totalDistance = (wrapper.vm as any).totalDistance
+    expect(totalDistance).toBeCloseTo(225.7, 1)
+  })
+
+  it('should switch between chart and table tabs', async () => {
+    vi.mocked(api.getStats).mockResolvedValueOnce(mockStatsWithData)
+
+    const wrapper = mount(StatsView)
+    await flushPromises()
+
+    // Default is chart tab
+    expect((wrapper.vm as any).activeTab).toBe('chart')
+
+    // Switch to table
+    ;(wrapper.vm as any).activeTab = 'table'
+    await wrapper.vm.$nextTick()
+
+    expect((wrapper.vm as any).activeTab).toBe('table')
+  })
+
+  it('should handle groupBy options', async () => {
+    const wrapper = mount(StatsView)
+    await flushPromises()
+
+    const groupByOptions = (wrapper.vm as any).groupByOptions
+    expect(groupByOptions).toHaveLength(4)
+    expect(groupByOptions.map((o: { value: string }) => o.value)).toContain('none')
+    expect(groupByOptions.map((o: { value: string }) => o.value)).toContain('day')
+    expect(groupByOptions.map((o: { value: string }) => o.value)).toContain('month')
+    expect(groupByOptions.map((o: { value: string }) => o.value)).toContain('year')
+  })
+
+  it('should clear dates and reload when filter is reset', async () => {
+    vi.mocked(api.getStats).mockResolvedValue(mockStatsWithData)
+
+    const wrapper = mount(StatsView)
+    await flushPromises()
+
+    // Set some filter values
+    ;(wrapper.vm as any).fromDate = '2025-01-01'
+    ;(wrapper.vm as any).toDate = '2025-12-31'
+    ;(wrapper.vm as any).groupBy = 'month'
+    await wrapper.vm.$nextTick()
+
+    // Call loadStats without filters
+    ;(wrapper.vm as any).fromDate = ''
+    ;(wrapper.vm as any).toDate = ''
+    ;(wrapper.vm as any).groupBy = 'none'
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+
+    // API receives undefined for empty string filters
+    expect(api.getStats).toHaveBeenLastCalledWith({
+      from: undefined,
+      to: undefined,
+      groupBy: 'none',
+    })
+  })
 })
