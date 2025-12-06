@@ -66,7 +66,6 @@ describe('LoginView', () => {
     const store = useAuthStore()
 
     store.login = vi.fn().mockResolvedValue(undefined)
-
     ;(wrapper.vm as any).username = 'testuser'
     ;(wrapper.vm as any).password = 'password123'
     await wrapper.vm.$nextTick()
@@ -122,7 +121,6 @@ describe('LoginView', () => {
     const store = useAuthStore()
 
     store.login = vi.fn().mockRejectedValue(new Error('Login failed'))
-
     ;(wrapper.vm as any).username = 'testuser'
     ;(wrapper.vm as any).password = 'wrongpassword'
     await wrapper.vm.$nextTick()

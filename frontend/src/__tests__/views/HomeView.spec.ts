@@ -152,7 +152,6 @@ describe('HomeView', () => {
   it('should swap stations when swapStations is called', async () => {
     const wrapper = mount(HomeView)
     await flushPromises()
-
     ;(wrapper.vm as any).fromStation = 'MX'
     ;(wrapper.vm as any).toStation = 'ZW'
     await wrapper.vm.$nextTick()
@@ -184,7 +183,6 @@ describe('HomeView', () => {
   it('should prevent same station selection', async () => {
     const wrapper = mount(HomeView)
     await flushPromises()
-
     ;(wrapper.vm as any).fromStation = 'MX'
     ;(wrapper.vm as any).toStation = 'MX'
     ;(wrapper.vm as any).analyticCode = 'PASSENGER'
@@ -197,7 +195,6 @@ describe('HomeView', () => {
   it('should use predefined analytic code when custom is disabled', async () => {
     const wrapper = mount(HomeView)
     await flushPromises()
-
     ;(wrapper.vm as any).useCustomCode = false
     ;(wrapper.vm as any).analyticCode = 'FREIGHT'
     await wrapper.vm.$nextTick()

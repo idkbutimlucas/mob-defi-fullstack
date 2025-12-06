@@ -84,7 +84,10 @@ describe('Auth Store', () => {
     it('should set isLoading during init', async () => {
       vi.mocked(api.loadStoredToken).mockReturnValue('token')
       vi.mocked(api.getCurrentUser).mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve({ id: '1', username: 'test', email: 'test@test.com' }), 10))
+        () =>
+          new Promise((resolve) =>
+            setTimeout(() => resolve({ id: '1', username: 'test', email: 'test@test.com' }), 10)
+          )
       )
 
       const store = useAuthStore()
@@ -127,7 +130,11 @@ describe('Auth Store', () => {
       vi.mocked(api.login).mockImplementation(
         () => new Promise((resolve) => setTimeout(() => resolve({ token: 'token' }), 10))
       )
-      vi.mocked(api.getCurrentUser).mockResolvedValue({ id: '1', username: 'test', email: 'test@test.com' })
+      vi.mocked(api.getCurrentUser).mockResolvedValue({
+        id: '1',
+        username: 'test',
+        email: 'test@test.com',
+      })
 
       const store = useAuthStore()
       const loginPromise = store.login('user', 'pass')
@@ -145,7 +152,11 @@ describe('Auth Store', () => {
       expect(store.error).toBe('First error')
 
       vi.mocked(api.login).mockResolvedValueOnce({ token: 'token' })
-      vi.mocked(api.getCurrentUser).mockResolvedValueOnce({ id: '1', username: 'test', email: 'test@test.com' })
+      vi.mocked(api.getCurrentUser).mockResolvedValueOnce({
+        id: '1',
+        username: 'test',
+        email: 'test@test.com',
+      })
 
       await store.login('user', 'pass')
       expect(store.error).toBeNull()
@@ -155,7 +166,11 @@ describe('Auth Store', () => {
   describe('register', () => {
     it('should register and auto-login successfully', async () => {
       const mockUser = { id: '1', username: 'newuser', email: 'new@example.com' }
-      vi.mocked(api.register).mockResolvedValue({ id: '1', username: 'newuser', email: 'new@example.com' })
+      vi.mocked(api.register).mockResolvedValue({
+        id: '1',
+        username: 'newuser',
+        email: 'new@example.com',
+      })
       vi.mocked(api.login).mockResolvedValue({ token: 'jwt-token' })
       vi.mocked(api.getCurrentUser).mockResolvedValue(mockUser)
 
@@ -195,13 +210,24 @@ describe('Auth Store', () => {
 
     it('should set isLoading during registration', async () => {
       vi.mocked(api.register).mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve({ id: '1', username: 'test', email: 'test@test.com' }), 10))
+        () =>
+          new Promise((resolve) =>
+            setTimeout(() => resolve({ id: '1', username: 'test', email: 'test@test.com' }), 10)
+          )
       )
       vi.mocked(api.login).mockResolvedValue({ token: 'token' })
-      vi.mocked(api.getCurrentUser).mockResolvedValue({ id: '1', username: 'test', email: 'test@test.com' })
+      vi.mocked(api.getCurrentUser).mockResolvedValue({
+        id: '1',
+        username: 'test',
+        email: 'test@test.com',
+      })
 
       const store = useAuthStore()
-      const registerPromise = store.register({ username: 'test', email: 'test@test.com', password: 'pass' })
+      const registerPromise = store.register({
+        username: 'test',
+        email: 'test@test.com',
+        password: 'pass',
+      })
 
       expect(store.isLoading).toBe(true)
       await registerPromise

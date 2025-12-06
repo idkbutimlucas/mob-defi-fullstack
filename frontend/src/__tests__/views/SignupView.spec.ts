@@ -49,7 +49,6 @@ describe('SignupView', () => {
     const store = useAuthStore()
 
     store.register = vi.fn().mockResolvedValue(undefined)
-
     ;(wrapper.vm as any).username = 'newuser'
     ;(wrapper.vm as any).email = 'new@example.com'
     ;(wrapper.vm as any).password = 'password123'
@@ -71,7 +70,6 @@ describe('SignupView', () => {
     const store = useAuthStore()
 
     store.register = vi.fn().mockResolvedValue(undefined)
-
     ;(wrapper.vm as any).username = 'newuser'
     ;(wrapper.vm as any).email = 'new@example.com'
     ;(wrapper.vm as any).password = 'password123'
@@ -89,7 +87,6 @@ describe('SignupView', () => {
     const store = useAuthStore()
 
     store.register = vi.fn().mockRejectedValue(new Error('Username already exists'))
-
     ;(wrapper.vm as any).username = 'existinguser'
     ;(wrapper.vm as any).email = 'existing@example.com'
     ;(wrapper.vm as any).password = 'password123'
@@ -113,7 +110,6 @@ describe('SignupView', () => {
       },
     }
     store.register = vi.fn().mockRejectedValue(new Error(JSON.stringify(errorResponse)))
-
     ;(wrapper.vm as any).username = 'ab'
     ;(wrapper.vm as any).email = 'invalid'
     ;(wrapper.vm as any).password = 'password123'
@@ -147,7 +143,6 @@ describe('SignupView', () => {
     const wrapper = mount(SignupView)
 
     expect((wrapper.vm as any).showPassword).toBe(false)
-
     ;(wrapper.vm as any).showPassword = true
     await wrapper.vm.$nextTick()
 
@@ -194,7 +189,6 @@ describe('SignupView', () => {
     const store = useAuthStore()
 
     store.register = vi.fn().mockRejectedValue(new Error('Registration failed'))
-
     ;(wrapper.vm as any).username = 'newuser'
     ;(wrapper.vm as any).email = 'new@example.com'
     ;(wrapper.vm as any).password = 'password123'
