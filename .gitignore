@@ -20,6 +20,7 @@ backend/.env.local
 backend/.env.*.local
 backend/config/jwt/*.pem
 backend/coverage.xml
+backend/coverage/
 backend/.phpunit.result.cache
 
 # Frontend Node
