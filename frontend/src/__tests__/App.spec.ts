@@ -64,7 +64,6 @@ describe('App', () => {
   it('should show username when authenticated', async () => {
     const store = useAuthStore()
     store.user = { id: '1', username: 'testuser', email: 'test@test.com' }
-    store.token = 'fake-token'
 
     const wrapper = mount(App, {
       global: {
@@ -121,7 +120,6 @@ describe('App', () => {
   it('should logout and redirect when handleLogout is called', async () => {
     const store = useAuthStore()
     store.user = { id: '1', username: 'testuser', email: 'test@test.com' }
-    store.token = 'fake-token'
 
     const logoutSpy = vi.spyOn(store, 'logout')
 
@@ -145,7 +143,6 @@ describe('App', () => {
   it('should show deconnexion button when authenticated', async () => {
     const store = useAuthStore()
     store.user = { id: '1', username: 'testuser', email: 'test@test.com' }
-    store.token = 'fake-token'
 
     const wrapper = mount(App, {
       global: {
