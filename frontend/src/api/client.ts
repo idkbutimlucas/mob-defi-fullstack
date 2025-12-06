@@ -173,5 +173,5 @@ export async function getStats(request: StatsRequest = {}): Promise<StatsRespons
   if (request.groupBy) params.append('groupBy', request.groupBy)
 
   const query = params.toString()
-  return fetchApi<StatsResponse>(`/stats/distances${query ? `?${query}` : ''}`, undefined, true)
+  return fetchApi<StatsResponse>(`/stats/distances${query ? `?${query}` : ''}`)
 }

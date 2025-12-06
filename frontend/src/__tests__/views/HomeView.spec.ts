@@ -111,4 +111,94 @@ describe('HomeView', () => {
     expect(wrapper.text()).toContain('62.40 km')
     expect(wrapper.text()).toContain('3 stations')
   })
+
+  it('should handle custom analytic code', async () => {
+    vi.mocked(api.calculateRoute).mockResolvedValueOnce({
+      id: '123',
+      fromStationId: 'MX',
+      toStationId: 'ZW',
+      analyticCode: 'CUSTOM',
+      distanceKm: 50.0,
+      path: ['MX', 'ZW'],
+      segmentDistances: [50.0],
+      createdAt: '2025-01-01T00:00:00Z',
+    })
+
+    const wrapper = mount(HomeView)
+    await flushPromises()
+
+    // Enable custom code
+    ;(wrapper.vm as any).useCustomCode = true
+    ;(wrapper.vm as any).customCode = 'custom'
+    ;(wrapper.vm as any).fromStation = 'MX'
+    ;(wrapper.vm as any).toStation = 'ZW'
+    await wrapper.vm.$nextTick()
+
+    // Check effective analytic code is uppercase
+    expect((wrapper.vm as any).effectiveAnalyticCode).toBe('CUSTOM')
+  })
+
+  it('should show error when form is invalid on submit', async () => {
+    const wrapper = mount(HomeView)
+    await flushPromises()
+
+    // Try to submit without filling form
+    await (wrapper.vm as any).submitForm()
+    await wrapper.vm.$nextTick()
+
+    expect((wrapper.vm as any).error).toBe('Veuillez remplir tous les champs correctement')
+  })
+
+  it('should swap stations when swapStations is called', async () => {
+    const wrapper = mount(HomeView)
+    await flushPromises()
+    ;(wrapper.vm as any).fromStation = 'MX'
+    ;(wrapper.vm as any).toStation = 'ZW'
+    await wrapper.vm.$nextTick()
+
+    // Swap stations
+    ;(wrapper.vm as any).swapStations()
+    await wrapper.vm.$nextTick()
+
+    expect((wrapper.vm as any).fromStation).toBe('ZW')
+    expect((wrapper.vm as any).toStation).toBe('MX')
+  })
+
+  it('should get station name from id', async () => {
+    const wrapper = mount(HomeView)
+    await flushPromises()
+
+    const stationName = (wrapper.vm as any).getStationName('MX')
+    expect(stationName).toBe('Montreux')
+  })
+
+  it('should return id if station not found', async () => {
+    const wrapper = mount(HomeView)
+    await flushPromises()
+
+    const stationName = (wrapper.vm as any).getStationName('UNKNOWN')
+    expect(stationName).toBe('UNKNOWN')
+  })
+
+  it('should prevent same station selection', async () => {
+    const wrapper = mount(HomeView)
+    await flushPromises()
+    ;(wrapper.vm as any).fromStation = 'MX'
+    ;(wrapper.vm as any).toStation = 'MX'
+    ;(wrapper.vm as any).analyticCode = 'PASSENGER'
+    await wrapper.vm.$nextTick()
+
+    // Form should not be valid
+    expect((wrapper.vm as any).isFormValid).toBe(false)
+  })
+
+  it('should use predefined analytic code when custom is disabled', async () => {
+    const wrapper = mount(HomeView)
+    await flushPromises()
+    ;(wrapper.vm as any).useCustomCode = false
+    ;(wrapper.vm as any).analyticCode = 'FREIGHT'
+    await wrapper.vm.$nextTick()
+
+    expect((wrapper.vm as any).effectiveAnalyticCode).toBe('FREIGHT')
+  })
 })
