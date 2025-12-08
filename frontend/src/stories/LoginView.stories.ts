@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/vue3'
-import { http, HttpResponse, delay } from 'msw'
 import { within, userEvent } from '@storybook/test'
 import LoginView from '../views/LoginView.vue'
 
@@ -44,76 +43,6 @@ export const Default: Story = {
 }
 
 /**
- * Formulaire avec erreur d'authentification.
- */
-export const WithError: Story = {
-  parameters: {
-    docs: {
-      description: {
-        story: "Affichage du message d'erreur apres une tentative de connexion echouee.",
-      },
-    },
-    msw: {
-      handlers: [
-        http.post('*/api/v1/login', async () => {
-          await delay(300)
-          return HttpResponse.json({ message: 'Identifiants invalides' }, { status: 401 })
-        }),
-      ],
-    },
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-
-    await new Promise((resolve) => setTimeout(resolve, 300))
-
-    const usernameInput = canvas.getByLabelText(/nom d'utilisateur/i)
-    const passwordInput = canvas.getByLabelText(/mot de passe/i)
-
-    await userEvent.type(usernameInput, 'wrong_user')
-    await userEvent.type(passwordInput, 'wrong_password')
-
-    const submitButton = canvas.getByRole('button', { name: /connexion/i })
-    await userEvent.click(submitButton)
-  },
-}
-
-/**
- * Etat de chargement pendant l'authentification.
- */
-export const Loading: Story = {
-  parameters: {
-    docs: {
-      description: {
-        story: 'Etat de chargement pendant la verification des identifiants.',
-      },
-    },
-    msw: {
-      handlers: [
-        http.post('*/api/v1/login', async () => {
-          await delay('infinite')
-          return HttpResponse.json({ token: 'mock-token' })
-        }),
-      ],
-    },
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-
-    await new Promise((resolve) => setTimeout(resolve, 300))
-
-    const usernameInput = canvas.getByLabelText(/nom d'utilisateur/i)
-    const passwordInput = canvas.getByLabelText(/mot de passe/i)
-
-    await userEvent.type(usernameInput, 'demo_user')
-    await userEvent.type(passwordInput, 'password123')
-
-    const submitButton = canvas.getByRole('button', { name: /connexion/i })
-    await userEvent.click(submitButton)
-  },
-}
-
-/**
  * Formulaire pre-rempli avec des identifiants.
  */
 export const FilledForm: Story = {
@@ -125,14 +54,136 @@ export const FilledForm: Story = {
     },
   },
   play: async ({ canvasElement }) => {
+    await new Promise((resolve) => setTimeout(resolve, 500))
+
+    // Find inputs by their labels
+    const inputs = canvasElement.querySelectorAll('input')
+    const usernameInput = inputs[0] as HTMLInputElement
+    const passwordInput = inputs[1] as HTMLInputElement
+
+    if (usernameInput && passwordInput) {
+      await userEvent.type(usernameInput, 'demo_user')
+      await userEvent.type(passwordInput, 'SecurePass123!')
+    }
+  },
+}
+
+/**
+ * Affichage du mot de passe (toggle visibilite).
+ */
+export const ShowPassword: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: "Saisie du mot de passe puis clic sur l'icone pour afficher le mot de passe.",
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await new Promise((resolve) => setTimeout(resolve, 500))
+
+    const inputs = canvasElement.querySelectorAll('input')
+    const passwordInput = inputs[1] as HTMLInputElement
+
+    if (passwordInput) {
+      await userEvent.type(passwordInput, 'MonMotDePasse!')
+      await new Promise((resolve) => setTimeout(resolve, 300))
+
+      // Click on the eye icon to show password
+      const eyeIcon = canvasElement.querySelector('.mdi-eye')
+      if (eyeIcon) {
+        await userEvent.click(eyeIcon)
+      }
+    }
+  },
+}
+
+/**
+ * Tentative de soumission avec champs vides.
+ */
+export const EmptySubmit: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: 'Clic sur le bouton sans remplir les champs - affiche les erreurs de validation.',
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await new Promise((resolve) => setTimeout(resolve, 500))
+
+    // Click the submit button
+    const submitButton = canvas.getByRole('button', { name: /se connecter/i })
+    await userEvent.click(submitButton)
+  },
+}
+
+/**
+ * Connexion complete avec soumission du formulaire.
+ */
+export const LoginAttempt: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: 'Remplissage du formulaire et soumission - simule une tentative de connexion.',
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await new Promise((resolve) => setTimeout(resolve, 500))
+
+    const inputs = canvasElement.querySelectorAll('input')
+    const usernameInput = inputs[0] as HTMLInputElement
+    const passwordInput = inputs[1] as HTMLInputElement
+
+    if (usernameInput && passwordInput) {
+      await userEvent.type(usernameInput, 'jean.dupont')
+      await userEvent.type(passwordInput, 'Password2024!')
+      await new Promise((resolve) => setTimeout(resolve, 300))
+
+      // Submit the form
+      const submitButton = canvas.getByRole('button', { name: /se connecter/i })
+      await userEvent.click(submitButton)
+    }
+  },
+}
+
+/**
+ * Echec de connexion - identifiants incorrects.
+ */
+export const LoginFailed: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: "Affichage du message d'erreur apres une tentative de connexion echouee.",
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    await new Promise((resolve) => setTimeout(resolve, 300))
+    // Set error scenario
+    window.__STORYBOOK_SCENARIO__ = 'login-error'
+    await new Promise((resolve) => setTimeout(resolve, 500))
 
-    const usernameInput = canvas.getByLabelText(/nom d'utilisateur/i)
-    const passwordInput = canvas.getByLabelText(/mot de passe/i)
+    const inputs = canvasElement.querySelectorAll('input')
+    const usernameInput = inputs[0] as HTMLInputElement
+    const passwordInput = inputs[1] as HTMLInputElement
 
-    await userEvent.type(usernameInput, 'demo_user')
-    await userEvent.type(passwordInput, 'SecurePass123!')
+    if (usernameInput && passwordInput) {
+      await userEvent.type(usernameInput, 'wrong_user')
+      await userEvent.type(passwordInput, 'WrongPassword!')
+      await new Promise((resolve) => setTimeout(resolve, 300))
+
+      // Submit the form - will trigger error
+      const submitButton = canvas.getByRole('button', { name: /se connecter/i })
+      await userEvent.click(submitButton)
+
+      // Reset scenario after a delay
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      window.__STORYBOOK_SCENARIO__ = 'default'
+    }
   },
 }

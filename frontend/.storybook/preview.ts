@@ -1,6 +1,5 @@
 import type { Preview } from '@storybook/vue3'
 import { setup } from '@storybook/vue3'
-import { initialize, mswLoader } from 'msw-storybook-addon'
 import { createVuetify } from 'vuetify'
 import { createPinia } from 'pinia'
 import { createMemoryHistory, createRouter } from 'vue-router'
@@ -8,10 +7,124 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import 'vuetify/styles'
 import '@mdi/font/css/materialdesignicons.css'
-import { handlers } from '../src/mocks/handlers'
+import {
+  mockStations,
+  mockRouteResponse,
+  mockStatsResponse,
+  mockStatsEmptyResponse,
+  mockLoginResponse,
+} from './mockData'
 
-// Initialize MSW
-initialize()
+// Declare global scenario variable for error stories
+declare global {
+  interface Window {
+    __STORYBOOK_SCENARIO__?: string
+  }
+}
+
+// Mock fetch for Storybook - intercepts API calls and returns mock data
+// This replaces MSW which doesn't work with Storybook 8 + Vite
+const originalFetch = window.fetch
+window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+  const url = typeof input === 'string' ? input : input.toString()
+  const scenario = window.__STORYBOOK_SCENARIO__ || 'default'
+
+  // Only intercept API calls
+  if (url.includes('/api/v1/')) {
+    const method = init?.method?.toUpperCase() || 'GET'
+
+    // Mock /stations endpoint
+    if (url.includes('/stations')) {
+      if (scenario === 'stations-error') {
+        return new Response(
+          JSON.stringify({ message: 'Erreur de connexion au serveur' }),
+          { status: 500, headers: { 'Content-Type': 'application/json' } }
+        )
+      }
+      return new Response(JSON.stringify(mockStations), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }
+
+    // Mock POST /routes endpoint
+    if (url.includes('/routes') && method === 'POST') {
+      if (scenario === 'route-error') {
+        return new Response(
+          JSON.stringify({ message: 'Aucun chemin trouve entre ces stations' }),
+          { status: 404, headers: { 'Content-Type': 'application/json' } }
+        )
+      }
+      return new Response(JSON.stringify(mockRouteResponse), {
+        status: 201,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }
+
+    // Mock /stats/distances endpoint
+    if (url.includes('/stats/distances')) {
+      if (scenario === 'stats-error') {
+        return new Response(
+          JSON.stringify({ message: 'Erreur lors du chargement des statistiques' }),
+          { status: 500, headers: { 'Content-Type': 'application/json' } }
+        )
+      }
+      if (scenario === 'stats-empty') {
+        return new Response(JSON.stringify(mockStatsEmptyResponse), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      }
+      return new Response(JSON.stringify(mockStatsResponse), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }
+
+    // Mock POST /login endpoint
+    if (url.includes('/login') && method === 'POST') {
+      if (scenario === 'login-error') {
+        return new Response(
+          JSON.stringify({ message: 'Identifiants incorrects' }),
+          { status: 401, headers: { 'Content-Type': 'application/json' } }
+        )
+      }
+      return new Response(JSON.stringify(mockLoginResponse), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }
+
+    // Mock POST /register endpoint
+    if (url.includes('/register') && method === 'POST') {
+      if (scenario === 'register-email-exists') {
+        return new Response(
+          JSON.stringify({ message: 'Cet email est deja utilise' }),
+          { status: 409, headers: { 'Content-Type': 'application/json' } }
+        )
+      }
+      return new Response(
+        JSON.stringify({ message: 'User created successfully', user: { id: '1', username: 'new_user', email: 'new@mob.ch' } }),
+        { status: 201, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Mock /me endpoint
+    if (url.includes('/me')) {
+      return new Response(
+        JSON.stringify({ id: '1', username: 'demo_user', email: 'demo@mob.ch', roles: ['ROLE_USER'] }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
+  }
+
+  // For non-API calls, use original fetch
+  return originalFetch(input, init)
+}
+
+// Set fake auth token for Storybook
+localStorage.setItem('authToken', 'storybook-mock-token')
+
 
 // Theme MOB - Identique a main.ts
 const vuetify = createVuetify({
@@ -112,11 +225,7 @@ const preview: Preview = {
         { name: 'dark', value: '#1a1a1a' },
       ],
     },
-    msw: {
-      handlers: handlers,
-    },
   },
-  loaders: [mswLoader],
   decorators: [
     (story) => ({
       components: { story },

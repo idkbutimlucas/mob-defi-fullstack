@@ -1,8 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/vue3'
-import { http, HttpResponse, delay } from 'msw'
 import { within, userEvent } from '@storybook/test'
 import SignupView from '../views/SignupView.vue'
-import { mockUser } from '../mocks/handlers'
 
 /**
  * Page d'inscription permettant aux nouveaux utilisateurs
@@ -45,37 +43,18 @@ export const Default: Story = {
 }
 
 /**
- * Formulaire avec erreurs de validation.
+ * Formulaire rempli correctement.
  */
-export const WithValidationErrors: Story = {
+export const FilledForm: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Affiche les erreurs de validation des champs (email invalide, username trop court).',
+        story: 'Formulaire avec toutes les informations correctement remplies.',
       },
-    },
-    msw: {
-      handlers: [
-        http.post('*/api/v1/register', async () => {
-          await delay(300)
-          return HttpResponse.json(
-            {
-              message: 'Validation failed',
-              errors: {
-                username: "Le nom d'utilisateur doit contenir au moins 3 caracteres",
-                email: "Format d'email invalide",
-              },
-            },
-            { status: 400 }
-          )
-        }),
-      ],
     },
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-
     await new Promise((resolve) => setTimeout(resolve, 300))
 
     const usernameInput = canvas.getByLabelText(/nom d'utilisateur/i)
@@ -83,99 +62,15 @@ export const WithValidationErrors: Story = {
     const passwordInput = canvas.getByLabelText(/^mot de passe$/i)
     const confirmInput = canvas.getByLabelText(/confirmer/i)
 
-    await userEvent.type(usernameInput, 'ab')
-    await userEvent.type(emailInput, 'invalid-email')
-    await userEvent.type(passwordInput, 'pass123')
-    await userEvent.type(confirmInput, 'pass123')
-
-    const submitButton = canvas.getByRole('button', { name: /inscription/i })
-    await userEvent.click(submitButton)
+    await userEvent.type(usernameInput, 'nouveau_user')
+    await userEvent.type(emailInput, 'nouveau@mob.ch')
+    await userEvent.type(passwordInput, 'SecurePass123!')
+    await userEvent.type(confirmInput, 'SecurePass123!')
   },
 }
 
 /**
- * Erreur serveur (utilisateur deja existant).
- */
-export const WithServerError: Story = {
-  parameters: {
-    docs: {
-      description: {
-        story: "Affiche une erreur serveur quand l'utilisateur existe deja.",
-      },
-    },
-    msw: {
-      handlers: [
-        http.post('*/api/v1/register', async () => {
-          await delay(300)
-          return HttpResponse.json(
-            { message: "Ce nom d'utilisateur est deja pris" },
-            { status: 409 }
-          )
-        }),
-      ],
-    },
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-
-    await new Promise((resolve) => setTimeout(resolve, 300))
-
-    const usernameInput = canvas.getByLabelText(/nom d'utilisateur/i)
-    const emailInput = canvas.getByLabelText(/email/i)
-    const passwordInput = canvas.getByLabelText(/^mot de passe$/i)
-    const confirmInput = canvas.getByLabelText(/confirmer/i)
-
-    await userEvent.type(usernameInput, 'existing_user')
-    await userEvent.type(emailInput, 'existing@mob.ch')
-    await userEvent.type(passwordInput, 'Password123!')
-    await userEvent.type(confirmInput, 'Password123!')
-
-    const submitButton = canvas.getByRole('button', { name: /inscription/i })
-    await userEvent.click(submitButton)
-  },
-}
-
-/**
- * Etat de chargement pendant l'inscription.
- */
-export const Loading: Story = {
-  parameters: {
-    docs: {
-      description: {
-        story: 'Etat de chargement pendant la creation du compte.',
-      },
-    },
-    msw: {
-      handlers: [
-        http.post('*/api/v1/register', async () => {
-          await delay('infinite')
-          return HttpResponse.json({ message: 'User created', user: mockUser }, { status: 201 })
-        }),
-      ],
-    },
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-
-    await new Promise((resolve) => setTimeout(resolve, 300))
-
-    const usernameInput = canvas.getByLabelText(/nom d'utilisateur/i)
-    const emailInput = canvas.getByLabelText(/email/i)
-    const passwordInput = canvas.getByLabelText(/^mot de passe$/i)
-    const confirmInput = canvas.getByLabelText(/confirmer/i)
-
-    await userEvent.type(usernameInput, 'new_user')
-    await userEvent.type(emailInput, 'new@mob.ch')
-    await userEvent.type(passwordInput, 'Password123!')
-    await userEvent.type(confirmInput, 'Password123!')
-
-    const submitButton = canvas.getByRole('button', { name: /inscription/i })
-    await userEvent.click(submitButton)
-  },
-}
-
-/**
- * Les mots de passe ne correspondent pas.
+ * Erreur: mots de passe differents.
  */
 export const PasswordMismatch: Story = {
   parameters: {
@@ -187,7 +82,6 @@ export const PasswordMismatch: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-
     await new Promise((resolve) => setTimeout(resolve, 300))
 
     const usernameInput = canvas.getByLabelText(/nom d'utilisateur/i)
@@ -199,5 +93,67 @@ export const PasswordMismatch: Story = {
     await userEvent.type(emailInput, 'new@mob.ch')
     await userEvent.type(passwordInput, 'Password123!')
     await userEvent.type(confirmInput, 'DifferentPassword!')
+  },
+}
+
+/**
+ * Username trop court.
+ */
+export const ShortUsername: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: "Nom d'utilisateur trop court (moins de 3 caracteres).",
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await new Promise((resolve) => setTimeout(resolve, 300))
+
+    const usernameInput = canvas.getByLabelText(/nom d'utilisateur/i)
+    const emailInput = canvas.getByLabelText(/email/i)
+
+    await userEvent.type(usernameInput, 'ab')
+    await userEvent.type(emailInput, 'test@mob.ch')
+  },
+}
+
+/**
+ * Erreur serveur: email deja utilise.
+ */
+export const EmailAlreadyExists: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: "Erreur du serveur indiquant que l'email est deja utilise.",
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    // Set error scenario
+    window.__STORYBOOK_SCENARIO__ = 'register-email-exists'
+    await new Promise((resolve) => setTimeout(resolve, 300))
+
+    const usernameInput = canvas.getByLabelText(/nom d'utilisateur/i)
+    const emailInput = canvas.getByLabelText(/email/i)
+    const passwordInput = canvas.getByLabelText(/^mot de passe$/i)
+    const confirmInput = canvas.getByLabelText(/confirmer/i)
+
+    await userEvent.type(usernameInput, 'existing_user')
+    await userEvent.type(emailInput, 'existing@mob.ch')
+    await userEvent.type(passwordInput, 'Password123!')
+    await userEvent.type(confirmInput, 'Password123!')
+    await new Promise((resolve) => setTimeout(resolve, 300))
+
+    // Submit the form - will trigger error
+    const submitButton = canvas.getByRole('button', { name: /cr[eé]er/i })
+    await userEvent.click(submitButton)
+
+    // Reset scenario
+    await new Promise((resolve) => setTimeout(resolve, 500))
+    window.__STORYBOOK_SCENARIO__ = 'default'
   },
 }

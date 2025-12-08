@@ -1,8 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/vue3'
-import { http, HttpResponse, delay } from 'msw'
 import { userEvent } from '@storybook/test'
 import StatsView from '../views/StatsView.vue'
-import { mockStatsData } from '../mocks/handlers'
 
 /**
  * Page de statistiques affichant les distances parcourues par code analytique.
@@ -18,6 +16,9 @@ import { mockStatsData } from '../mocks/handlers'
  * - **FREIGHT** : Transport de marchandises
  * - **MAINTENANCE** : Trajets de maintenance
  * - **SERVICE** : Trajets de service
+ *
+ * **Note**: Les donnees sont mockees dans Storybook. Les filtres sont
+ * visibles mais ne modifient pas les donnees affichees.
  */
 const meta = {
   title: 'Views/StatsView',
@@ -38,58 +39,31 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 /**
- * Affichage par defaut avec les donnees mockees.
- * Montre les KPIs, les filtres et les graphiques.
+ * Vue par defaut - Graphique a barres.
  */
 export const Default: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Vue par defaut avec des donnees de statistiques.',
+        story: 'Vue par defaut avec KPIs, filtres et graphique a barres.',
       },
     },
   },
 }
 
 /**
- * Vue avec le graphique a barres selectionne.
- * Ideal pour comparer les distances entre codes analytiques.
- */
-export const BarChart: Story = {
-  parameters: {
-    docs: {
-      description: {
-        story: 'Graphique a barres comparant les distances par code analytique.',
-      },
-    },
-  },
-  play: async ({ canvasElement }) => {
-    await new Promise((resolve) => setTimeout(resolve, 800))
-
-    // Click on bar chart tab
-    const tabs = canvasElement.querySelectorAll('.v-tab')
-    if (tabs.length > 0) {
-      await userEvent.click(tabs[0] as HTMLElement)
-    }
-  },
-}
-
-/**
- * Vue avec le graphique en camembert (repartition).
- * Montre la proportion de chaque code analytique.
+ * Graphique circulaire (Repartition).
  */
 export const DoughnutChart: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Graphique circulaire montrant la repartition des distances.',
+        story: 'Visualisation en graphique circulaire montrant la repartition par code analytique.',
       },
     },
   },
   play: async ({ canvasElement }) => {
     await new Promise((resolve) => setTimeout(resolve, 800))
-
-    // Click on doughnut chart tab
     const tabs = canvasElement.querySelectorAll('.v-tab')
     if (tabs.length > 1) {
       await userEvent.click(tabs[1] as HTMLElement)
@@ -98,21 +72,18 @@ export const DoughnutChart: Story = {
 }
 
 /**
- * Vue tableau avec toutes les donnees detaillees.
- * Affiche le code, la distance et le pourcentage.
+ * Vue tableau detaillee.
  */
 export const TableView: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Tableau detaille avec distances et pourcentages.',
+        story: 'Tableau detaille avec distance par code analytique et pourcentage.',
       },
     },
   },
   play: async ({ canvasElement }) => {
     await new Promise((resolve) => setTimeout(resolve, 800))
-
-    // Click on table tab
     const tabs = canvasElement.querySelectorAll('.v-tab')
     if (tabs.length > 2) {
       await userEvent.click(tabs[2] as HTMLElement)
@@ -121,112 +92,49 @@ export const TableView: Story = {
 }
 
 /**
- * Etat de chargement pendant la recuperation des donnees.
+ * Aucune donnee disponible.
  */
-export const Loading: Story = {
-  parameters: {
-    docs: {
-      description: {
-        story: 'Barre de progression pendant le chargement.',
-      },
-    },
-    msw: {
-      handlers: [
-        http.get('*/api/v1/stats/distances', async () => {
-          await delay('infinite')
-          return HttpResponse.json(mockStatsData)
-        }),
-      ],
-    },
-  },
-}
-
-/**
- * Etat vide quand aucune donnee n'est disponible.
- * Invite l'utilisateur a calculer des trajets.
- */
-export const Empty: Story = {
+export const NoData: Story = {
   parameters: {
     docs: {
       description: {
         story: "Message affiche quand aucune statistique n'est disponible.",
       },
     },
-    msw: {
-      handlers: [
-        http.get('*/api/v1/stats/distances', async () => {
-          await delay(200)
-          return HttpResponse.json({
-            from: null,
-            to: null,
-            groupBy: 'none',
-            items: [],
-          })
-        }),
-      ],
+  },
+  decorators: [
+    (story) => {
+      window.__STORYBOOK_SCENARIO__ = 'stats-empty'
+      return story()
     },
+  ],
+  play: async () => {
+    // Reset scenario after render
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    window.__STORYBOOK_SCENARIO__ = 'default'
   },
 }
 
 /**
- * Statistiques filtrees par periode.
+ * Erreur de chargement.
  */
-export const WithDateFilter: Story = {
+export const LoadError: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Donnees filtrees par periode specifique.',
+        story: 'Erreur affichee en cas de probleme de chargement des statistiques.',
       },
     },
   },
-  play: async ({ canvasElement }) => {
-    await new Promise((resolve) => setTimeout(resolve, 800))
-
-    // Try to find and interact with date inputs
-    const fromInput = canvasElement.querySelector('[data-testid="from-date"]') as HTMLInputElement
-    const toInput = canvasElement.querySelector('[data-testid="to-date"]') as HTMLInputElement
-
-    if (fromInput) {
-      await userEvent.clear(fromInput)
-      await userEvent.type(fromInput, '2024-01-01')
-    }
-
-    if (toInput) {
-      await userEvent.clear(toInput)
-      await userEvent.type(toInput, '2024-03-31')
-    }
-  },
-}
-
-/**
- * Statistiques groupees par mois.
- */
-export const GroupedByMonth: Story = {
-  parameters: {
-    docs: {
-      description: {
-        story: 'Donnees groupees par mois pour analyse temporelle.',
-      },
+  decorators: [
+    (story) => {
+      window.__STORYBOOK_SCENARIO__ = 'stats-error'
+      return story()
     },
-    msw: {
-      handlers: [
-        http.get('*/api/v1/stats/distances', async () => {
-          await delay(200)
-          return HttpResponse.json({
-            from: '2024-01-01',
-            to: '2024-12-31',
-            groupBy: 'month',
-            items: [
-              { analyticCode: 'PASSENGER', totalDistanceKm: 15420.5, group: '2024-01' },
-              { analyticCode: 'PASSENGER', totalDistanceKm: 14280.3, group: '2024-02' },
-              { analyticCode: 'PASSENGER', totalDistanceKm: 16890.7, group: '2024-03' },
-              { analyticCode: 'FREIGHT', totalDistanceKm: 8450.2, group: '2024-01' },
-              { analyticCode: 'FREIGHT', totalDistanceKm: 7920.8, group: '2024-02' },
-              { analyticCode: 'FREIGHT', totalDistanceKm: 9120.4, group: '2024-03' },
-            ],
-          })
-        }),
-      ],
-    },
+  ],
+  play: async () => {
+    // Reset scenario after render
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    window.__STORYBOOK_SCENARIO__ = 'default'
   },
 }
