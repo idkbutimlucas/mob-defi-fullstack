@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/vue3'
-import { http, HttpResponse, delay } from 'msw'
+import { within, userEvent } from '@storybook/test'
 import HomeView from '../views/HomeView.vue'
-import { mockStations, mockRouteResult } from '../mocks/handlers'
 
 /**
  * Page principale de l'application permettant de calculer un trajet
@@ -12,6 +11,9 @@ import { mockStations, mockRouteResult } from '../mocks/handlers'
  * - Choix du code analytique (Passagers, Fret, Maintenance, Service)
  * - Code analytique personnalise
  * - Affichage du resultat avec distance et stations traversees
+ *
+ * **Note**: Les donnees sont mockees dans Storybook pour permettre
+ * le test des interactions sans backend.
  */
 const meta = {
   title: 'Views/HomeView',
@@ -32,153 +34,284 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 /**
- * Etat par defaut de la page avec le formulaire vide.
- * Les stations sont chargees automatiquement depuis l'API.
+ * Etat par defaut avec le formulaire vide.
  */
 export const Default: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Formulaire vide pret a recevoir les selections utilisateur.',
+        story: 'Formulaire de calcul de trajet avec stations chargees depuis le mock.',
       },
     },
   },
 }
 
 /**
- * Simulation d'un calcul de trajet reussi.
- * Montre le resultat avec la distance et le chemin calcule.
+ * Selection des stations uniquement (sans soumission).
  */
-export const WithRouteResult: Story = {
+export const StationsSelected: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: "Selection des stations de depart et d'arrivee via les menus deroulants.",
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await new Promise((resolve) => setTimeout(resolve, 800))
+
+    const fromInput = canvasElement.querySelector(
+      '[data-testid="from-station"] input'
+    ) as HTMLInputElement
+    const toInput = canvasElement.querySelector(
+      '[data-testid="to-station"] input'
+    ) as HTMLInputElement
+
+    if (fromInput && toInput) {
+      // Select "from" station - Vevey
+      await userEvent.click(fromInput)
+      await new Promise((resolve) => setTimeout(resolve, 300))
+      await userEvent.type(fromInput, 'Vev')
+      await new Promise((resolve) => setTimeout(resolve, 300))
+      const fromOptions = document.querySelectorAll('.v-list-item')
+      if (fromOptions.length > 0) {
+        await userEvent.click(fromOptions[0] as HTMLElement)
+      }
+      await new Promise((resolve) => setTimeout(resolve, 300))
+
+      // Select "to" station - Zweisimmen
+      await userEvent.click(toInput)
+      await new Promise((resolve) => setTimeout(resolve, 300))
+      await userEvent.type(toInput, 'Zwei')
+      await new Promise((resolve) => setTimeout(resolve, 300))
+      const toOptions = document.querySelectorAll('.v-list-item')
+      if (toOptions.length > 0) {
+        await userEvent.click(toOptions[0] as HTMLElement)
+      }
+    }
+  },
+}
+
+/**
+ * Selection du type Fret.
+ */
+export const FreightType: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: 'Selection du type de trajet Fret.',
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await new Promise((resolve) => setTimeout(resolve, 500))
+
+    // Click on Fret chip
+    const fretChip = canvas.getByText('Fret')
+    await userEvent.click(fretChip)
+  },
+}
+
+/**
+ * Selection du type Maintenance.
+ */
+export const MaintenanceType: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: 'Selection du type de trajet Maintenance.',
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await new Promise((resolve) => setTimeout(resolve, 500))
+
+    // Click on Maintenance chip
+    const maintenanceChip = canvas.getByText('Maintenance')
+    await userEvent.click(maintenanceChip)
+  },
+}
+
+/**
+ * Activation du code personnalise.
+ */
+export const CustomCode: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: "Activation et saisie d'un code analytique personnalise.",
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await new Promise((resolve) => setTimeout(resolve, 500))
+
+    // Click on custom code checkbox
+    const checkbox = canvas.getByLabelText(/code personnalis/i)
+    await userEvent.click(checkbox)
+
+    // Wait for the input field to appear
+    await new Promise((resolve) => setTimeout(resolve, 400))
+
+    // Find and type in the custom code input (has placeholder "Ex: SPECIAL")
+    const customInput = canvas.getByPlaceholderText(/ex.*special/i)
+    await userEvent.type(customInput, 'TRAIN_EXPRESS')
+  },
+}
+
+/**
+ * Calcul d'itineraire complet avec selection des stations.
+ */
+export const RouteCalculation: Story = {
   parameters: {
     docs: {
       description: {
         story:
-          'Affichage du resultat apres un calcul de trajet reussi entre Montreux et Zweisimmen.',
+          "Calcul d'itineraire complet : selection des stations, type de trajet, et soumission.",
       },
     },
   },
   play: async ({ canvasElement }) => {
-    // Wait for component to mount and load stations
-    await new Promise((resolve) => setTimeout(resolve, 500))
+    const canvas = within(canvasElement)
+    await new Promise((resolve) => setTimeout(resolve, 800))
 
-    // Find and fill the form
-    const fromSelect = canvasElement.querySelector('[data-testid="from-station"]') as HTMLElement
-    const toSelect = canvasElement.querySelector('[data-testid="to-station"]') as HTMLElement
+    // Get autocomplete inputs by data-testid
+    const fromInput = canvasElement.querySelector(
+      '[data-testid="from-station"] input'
+    ) as HTMLInputElement
+    const toInput = canvasElement.querySelector(
+      '[data-testid="to-station"] input'
+    ) as HTMLInputElement
 
-    if (fromSelect) fromSelect.click()
-    await new Promise((resolve) => setTimeout(resolve, 200))
+    if (fromInput && toInput) {
+      // Click and select "from" station
+      await userEvent.click(fromInput)
+      await new Promise((resolve) => setTimeout(resolve, 300))
 
-    // Select first station
-    const firstOption = document.querySelector('.v-list-item')
-    if (firstOption) (firstOption as HTMLElement).click()
+      // Type to filter and select Montreux
+      await userEvent.type(fromInput, 'Mon')
+      await new Promise((resolve) => setTimeout(resolve, 300))
 
-    await new Promise((resolve) => setTimeout(resolve, 200))
+      // Click on the first option in dropdown
+      const fromOptions = document.querySelectorAll('.v-list-item')
+      if (fromOptions.length > 0) {
+        await userEvent.click(fromOptions[0] as HTMLElement)
+      }
+      await new Promise((resolve) => setTimeout(resolve, 300))
 
-    if (toSelect) toSelect.click()
-    await new Promise((resolve) => setTimeout(resolve, 200))
+      // Click and select "to" station
+      await userEvent.click(toInput)
+      await new Promise((resolve) => setTimeout(resolve, 300))
 
-    // Select last station
-    const options = document.querySelectorAll('.v-list-item')
-    if (options.length > 1) (options[options.length - 1] as HTMLElement).click()
+      // Type to filter and select Gstaad
+      await userEvent.type(toInput, 'Gst')
+      await new Promise((resolve) => setTimeout(resolve, 300))
 
-    await new Promise((resolve) => setTimeout(resolve, 200))
+      // Click on the first option in dropdown
+      const toOptions = document.querySelectorAll('.v-list-item')
+      if (toOptions.length > 0) {
+        await userEvent.click(toOptions[0] as HTMLElement)
+      }
+      await new Promise((resolve) => setTimeout(resolve, 300))
 
-    // Submit form
-    const submitBtn = canvasElement.querySelector('button[type="submit"]') as HTMLElement
-    if (submitBtn) submitBtn.click()
+      // Select trip type - click on "Passagers" chip
+      const passagersChip = canvas.getByText('Passagers')
+      await userEvent.click(passagersChip)
+      await new Promise((resolve) => setTimeout(resolve, 300))
+
+      // Submit the form
+      const submitButton = canvas.getByRole('button', { name: /calculer/i })
+      await userEvent.click(submitButton)
+    }
   },
 }
 
 /**
- * Etat de chargement pendant le calcul du trajet.
+ * Erreur de chargement des stations.
  */
-export const Loading: Story = {
+export const StationsLoadError: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Etat de chargement pendant que le calcul est en cours.',
+        story: "Affichage d'une erreur lorsque les stations ne peuvent pas etre chargees.",
       },
     },
-    msw: {
-      handlers: [
-        http.get('*/api/v1/stations', async () => {
-          return HttpResponse.json(mockStations)
-        }),
-        http.post('*/api/v1/routes', async () => {
-          await delay('infinite')
-          return HttpResponse.json(mockRouteResult, { status: 201 })
-        }),
-      ],
-    },
   },
-  play: async ({ canvasElement }) => {
-    await new Promise((resolve) => setTimeout(resolve, 500))
-
-    const fromSelect = canvasElement.querySelector('[data-testid="from-station"]') as HTMLElement
-    const toSelect = canvasElement.querySelector('[data-testid="to-station"]') as HTMLElement
-
-    if (fromSelect) fromSelect.click()
-    await new Promise((resolve) => setTimeout(resolve, 200))
-    const firstOption = document.querySelector('.v-list-item')
-    if (firstOption) (firstOption as HTMLElement).click()
-    await new Promise((resolve) => setTimeout(resolve, 200))
-
-    if (toSelect) toSelect.click()
-    await new Promise((resolve) => setTimeout(resolve, 200))
-    const options = document.querySelectorAll('.v-list-item')
-    if (options.length > 1) (options[options.length - 1] as HTMLElement).click()
-    await new Promise((resolve) => setTimeout(resolve, 200))
-
-    const submitBtn = canvasElement.querySelector('button[type="submit"]') as HTMLElement
-    if (submitBtn) submitBtn.click()
+  decorators: [
+    (story) => {
+      window.__STORYBOOK_SCENARIO__ = 'stations-error'
+      return story()
+    },
+  ],
+  play: async () => {
+    // Reset scenario after render
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    window.__STORYBOOK_SCENARIO__ = 'default'
   },
 }
 
 /**
- * Affichage d'une erreur (station non trouvee, reseau indisponible, etc.)
+ * Erreur de calcul d'itineraire.
  */
-export const WithError: Story = {
+export const RouteCalculationError: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Affichage d'un message d'erreur en cas de probleme.",
+        story: "Erreur affichee quand aucun chemin n'est trouve entre les stations.",
       },
-    },
-    msw: {
-      handlers: [
-        http.get('*/api/v1/stations', async () => {
-          return HttpResponse.json(mockStations)
-        }),
-        http.post('*/api/v1/routes', async () => {
-          await delay(300)
-          return HttpResponse.json(
-            { message: 'Aucun itineraire trouve entre ces deux stations' },
-            { status: 422 }
-          )
-        }),
-      ],
     },
   },
   play: async ({ canvasElement }) => {
-    await new Promise((resolve) => setTimeout(resolve, 500))
+    const canvas = within(canvasElement)
+    await new Promise((resolve) => setTimeout(resolve, 800))
 
-    const fromSelect = canvasElement.querySelector('[data-testid="from-station"]') as HTMLElement
-    const toSelect = canvasElement.querySelector('[data-testid="to-station"]') as HTMLElement
+    // Set error scenario for route calculation
+    window.__STORYBOOK_SCENARIO__ = 'route-error'
 
-    if (fromSelect) fromSelect.click()
-    await new Promise((resolve) => setTimeout(resolve, 200))
-    const firstOption = document.querySelector('.v-list-item')
-    if (firstOption) (firstOption as HTMLElement).click()
-    await new Promise((resolve) => setTimeout(resolve, 200))
+    const fromInput = canvasElement.querySelector(
+      '[data-testid="from-station"] input'
+    ) as HTMLInputElement
+    const toInput = canvasElement.querySelector(
+      '[data-testid="to-station"] input'
+    ) as HTMLInputElement
 
-    if (toSelect) toSelect.click()
-    await new Promise((resolve) => setTimeout(resolve, 200))
-    const options = document.querySelectorAll('.v-list-item')
-    if (options.length > 1) (options[options.length - 1] as HTMLElement).click()
-    await new Promise((resolve) => setTimeout(resolve, 200))
+    if (fromInput && toInput) {
+      // Select stations
+      await userEvent.click(fromInput)
+      await new Promise((resolve) => setTimeout(resolve, 300))
+      await userEvent.type(fromInput, 'Mon')
+      await new Promise((resolve) => setTimeout(resolve, 300))
+      const fromOptions = document.querySelectorAll('.v-list-item')
+      if (fromOptions.length > 0) {
+        await userEvent.click(fromOptions[0] as HTMLElement)
+      }
+      await new Promise((resolve) => setTimeout(resolve, 300))
 
-    const submitBtn = canvasElement.querySelector('button[type="submit"]') as HTMLElement
-    if (submitBtn) submitBtn.click()
+      await userEvent.click(toInput)
+      await new Promise((resolve) => setTimeout(resolve, 300))
+      await userEvent.type(toInput, 'Gst')
+      await new Promise((resolve) => setTimeout(resolve, 300))
+      const toOptions = document.querySelectorAll('.v-list-item')
+      if (toOptions.length > 0) {
+        await userEvent.click(toOptions[0] as HTMLElement)
+      }
+      await new Promise((resolve) => setTimeout(resolve, 300))
+
+      // Select type
+      const passagersChip = canvas.getByText('Passagers')
+      await userEvent.click(passagersChip)
+      await new Promise((resolve) => setTimeout(resolve, 300))
+
+      // Submit - will trigger error
+      const submitButton = canvas.getByRole('button', { name: /calculer/i })
+      await userEvent.click(submitButton)
+
+      // Reset scenario
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      window.__STORYBOOK_SCENARIO__ = 'default'
+    }
   },
 }

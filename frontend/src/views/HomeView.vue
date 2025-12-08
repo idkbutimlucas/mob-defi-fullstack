@@ -126,6 +126,7 @@
                 prepend-inner-icon="mdi-magnify"
                 clearable
                 hide-details
+                data-testid="from-station"
               />
             </div>
 
@@ -157,6 +158,7 @@
                 prepend-inner-icon="mdi-magnify"
                 clearable
                 hide-details
+                data-testid="to-station"
               />
             </div>
           </div>
