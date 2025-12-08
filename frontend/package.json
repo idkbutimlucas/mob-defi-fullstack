@@ -44,6 +44,8 @@
     "eslint-plugin-storybook": "^0.11.1",
     "eslint-plugin-vue": "^9.32.0",
     "happy-dom": "^15.11.7",
+    "msw": "^2.12.4",
+    "msw-storybook-addon": "^2.0.6",
     "prettier": "^3.4.2",
     "sass": "^1.82.0",
     "storybook": "^8.4.7",
@@ -53,5 +55,10 @@
     "vite-plugin-vuetify": "^2.1.2",
     "vitest": "^2.1.8",
     "vue-tsc": "^2.1.10"
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
   }
 }
