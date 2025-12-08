@@ -1,6 +1,8 @@
 <script setup lang="ts">
   import { ref, onMounted, computed } from 'vue'
+  import { useRouter } from 'vue-router'
   import { getStats, type StatsResponse, type GroupBy } from '@/api/client'
+  import { useAuthStore } from '@/stores/auth'
   import { Bar, Doughnut } from 'vue-chartjs'
   import {
     Chart as ChartJS,
@@ -13,6 +15,9 @@
     ArcElement,
     type TooltipItem,
   } from 'chart.js'
+
+  const router = useRouter()
+  const authStore = useAuthStore()
 
   ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, ArcElement)
 
@@ -224,6 +229,11 @@
   }
 
   onMounted(() => {
+    // Redirect to login if not authenticated
+    if (!authStore.isAuthenticated) {
+      router.push({ name: 'login', query: { redirect: '/stats' } })
+      return
+    }
     fetchStats()
   })
 </script>

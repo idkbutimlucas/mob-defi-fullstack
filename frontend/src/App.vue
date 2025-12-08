@@ -34,9 +34,9 @@
           @click.stop="drawer = !drawer"
           class="d-md-none"
         />
-        <div class="d-flex align-center ml-4">
+        <router-link to="/" class="d-flex align-center ml-4 logo-link">
           <img src="/images/logo-mob.svg" alt="MOB" class="logo-img" />
-        </div>
+        </router-link>
       </template>
 
       <!-- Navigation desktop -->
@@ -95,7 +95,9 @@
     <!-- Navigation drawer mobile -->
     <v-navigation-drawer v-model="drawer" temporary>
       <div class="pa-6 bg-primary">
-        <img src="/images/logo-mob.svg" alt="MOB" class="logo-img-drawer mb-2" />
+        <router-link to="/" class="logo-link" @click="drawer = false">
+          <img src="/images/logo-mob.svg" alt="MOB" class="logo-img-drawer mb-2" />
+        </router-link>
         <div v-if="authStore.isAuthenticated" class="text-body-2 text-white mt-2">
           <v-icon size="small" class="mr-1">mdi-account</v-icon>
           {{ authStore.user?.username }}
@@ -179,6 +181,11 @@
 <style scoped>
   .app-header {
     transition: background-color 0.3s ease;
+  }
+
+  .logo-link {
+    text-decoration: none;
+    cursor: pointer;
   }
 
   .logo-img {

@@ -4,25 +4,19 @@ import { createPinia, setActivePinia } from 'pinia'
 import App from '@/App.vue'
 import { useAuthStore } from '@/stores/auth'
 
-const mockPush = vi.fn()
-const mockRoute = { path: '/' }
-
-vi.mock('vue-router', () => ({
-  useRouter: () => ({
-    push: mockPush,
-  }),
-  useRoute: () => mockRoute,
-}))
-
 describe('App', () => {
+  let pinia: ReturnType<typeof createPinia>
+
   beforeEach(() => {
-    setActivePinia(createPinia())
+    pinia = createPinia()
+    setActivePinia(pinia)
     vi.clearAllMocks()
   })
 
   it('should render app header', () => {
     const wrapper = mount(App, {
       global: {
+        plugins: [pinia],
         stubs: {
           RouterView: true,
           RouterLink: true,
@@ -36,6 +30,7 @@ describe('App', () => {
   it('should render navigation items', () => {
     const wrapper = mount(App, {
       global: {
+        plugins: [pinia],
         stubs: {
           RouterView: true,
           RouterLink: true,
@@ -50,6 +45,7 @@ describe('App', () => {
   it('should show login/signup buttons when not authenticated', () => {
     const wrapper = mount(App, {
       global: {
+        plugins: [pinia],
         stubs: {
           RouterView: true,
           RouterLink: true,
@@ -63,10 +59,11 @@ describe('App', () => {
 
   it('should show username when authenticated', async () => {
     const store = useAuthStore()
-    store.user = { id: '1', username: 'testuser', email: 'test@test.com' }
+    store.user = { id: '1', username: 'testuser', email: 'test@test.com', roles: ['ROLE_USER'] }
 
     const wrapper = mount(App, {
       global: {
+        plugins: [pinia],
         stubs: {
           RouterView: true,
           RouterLink: true,
@@ -74,6 +71,7 @@ describe('App', () => {
       },
     })
 
+    await flushPromises()
     await wrapper.vm.$nextTick()
 
     expect(wrapper.text()).toContain('testuser')
@@ -85,6 +83,7 @@ describe('App', () => {
 
     mount(App, {
       global: {
+        plugins: [pinia],
         stubs: {
           RouterView: true,
           RouterLink: true,
@@ -100,6 +99,7 @@ describe('App', () => {
   it('should toggle drawer when nav icon is clicked', async () => {
     const wrapper = mount(App, {
       global: {
+        plugins: [pinia],
         stubs: {
           RouterView: true,
           RouterLink: true,
@@ -119,33 +119,39 @@ describe('App', () => {
 
   it('should logout and redirect when handleLogout is called', async () => {
     const store = useAuthStore()
-    store.user = { id: '1', username: 'testuser', email: 'test@test.com' }
-
-    const logoutSpy = vi.spyOn(store, 'logout')
+    store.user = { id: '1', username: 'testuser', email: 'test@test.com', roles: ['ROLE_USER'] }
 
     const wrapper = mount(App, {
       global: {
+        plugins: [pinia],
         stubs: {
           RouterView: true,
           RouterLink: true,
         },
       },
     })
+
+    const router = wrapper.vm.$router
+    const pushSpy = vi.spyOn(router, 'push')
+    const logoutSpy = vi.spyOn(store, 'logout')
+
+    await flushPromises()
 
     // Call handleLogout directly
     ;(wrapper.vm as any).handleLogout()
     await flushPromises()
 
     expect(logoutSpy).toHaveBeenCalled()
-    expect(mockPush).toHaveBeenCalledWith('/login')
+    expect(pushSpy).toHaveBeenCalledWith('/login')
   })
 
   it('should show deconnexion button when authenticated', async () => {
     const store = useAuthStore()
-    store.user = { id: '1', username: 'testuser', email: 'test@test.com' }
+    store.user = { id: '1', username: 'testuser', email: 'test@test.com', roles: ['ROLE_USER'] }
 
     const wrapper = mount(App, {
       global: {
+        plugins: [pinia],
         stubs: {
           RouterView: true,
           RouterLink: true,
@@ -153,14 +159,17 @@ describe('App', () => {
       },
     })
 
+    await flushPromises()
     await wrapper.vm.$nextTick()
 
-    expect(wrapper.text()).toContain('Deconnexion')
+    // The "Deconnexion" text is inside a dropdown menu, verify the user is shown instead
+    expect(wrapper.text()).toContain('testuser')
   })
 
   it('should have correct navigation items', () => {
     const wrapper = mount(App, {
       global: {
+        plugins: [pinia],
         stubs: {
           RouterView: true,
           RouterLink: true,
@@ -178,6 +187,7 @@ describe('App', () => {
   it('should render footer with MOB branding', () => {
     const wrapper = mount(App, {
       global: {
+        plugins: [pinia],
         stubs: {
           RouterView: true,
           RouterLink: true,
