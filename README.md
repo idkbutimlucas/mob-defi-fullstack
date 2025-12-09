@@ -174,11 +174,13 @@ Bonne chance, et surtout amuse-toi en codant !
 
 ---
 
-## À propos de ma démarche
+## Ma demarche
 
-En abordant ce défi, j'ai voulu démontrer non seulement mes compétences techniques, mais aussi ma façon de réfléchir et de structurer un projet professionnel. Diplômé d'un Master 2 en informatique, j'ai eu l'occasion pendant mes trois années d'alternance en entreprise de travailler avec PHP natif et Symfony, de mettre en place des pipelines CI/CD et de conteneuriser des applications avec Docker. Cette expérience m'a permis d'acquérir une vision concrète du développement en contexte professionnel.
+Diplome d'un Master 2 en informatique, j'ai travaille trois ans en alternance avec PHP/Symfony, GitLab CI/CD et Docker. Pour ce defi, j'ai voulu montrer comment je raisonne et structure un projet professionnel.
 
-Pour ce défi, j'ai cherché à appliquer les bonnes pratiques que j'ai apprises tout en m'adaptant aux outils et méthodologies mentionnés dans l'énoncé. Mon objectif principal était de livrer une solution qui pourrait être mise en production sans modifications majeures, tout en gardant un code lisible et maintenable par une équipe.
+Mon objectif : livrer une solution production-ready, lisible et maintenable par une equipe.
+
+> Pour le detail complet de mon parcours, voir [DECISION_LOG.md](./DECISION_LOG.md)
 
 ---
 
@@ -219,73 +221,21 @@ Le backend suit une architecture Domain-Driven Design avec des Bounded Contexts 
 
 ---
 
-## 🧠 Mon raisonnement et mes choix techniques
+## Mes choix techniques
 
-### Pourquoi Symfony 7 ?
+### Symfony 7 et DDD
 
-J'ai choisi Symfony pour plusieurs raisons. D'abord, c'est un framework que vous utilisez en interne, ce qui me semblait pertinent pour démontrer ma capacité à m'intégrer rapidement dans votre environnement. Ensuite, ayant déjà travaillé avec Symfony en alternance, je connais bien son écosystème et ses conventions. Symfony offre une architecture solide qui se prête naturellement au Domain-Driven Design grâce à son système d'autowiring et son découplage des composants.
+J'ai choisi Symfony car c'est le framework utilise en interne chez MOB. L'architecture DDD avec trois Bounded Contexts (Routing, Analytics, Auth) permet a un nouveau developpeur de comprendre rapidement ou se trouve chaque responsabilite.
 
-J'aurais pu opter pour une approche plus légère avec Slim ou même du PHP natif (que je maîtrise également), mais j'ai préféré montrer ma capacité à exploiter pleinement un framework complet, avec tout ce que cela implique en termes de configuration et de bonnes pratiques.
+### Algorithme de Dijkstra
 
-### Pourquoi le Domain-Driven Design ?
+Plutot qu'un simple BFS, j'ai implemente Dijkstra pour garantir le plus court chemin en distance kilometrique. Optimise avec `SplPriorityQueue`.
 
-Le DDD n'était pas obligatoire, mais j'ai fait ce choix délibérément. Le domaine métier du défi (réseau ferroviaire, trajets, codes analytiques) se prête parfaitement à cette approche. En structurant le code en Bounded Contexts (Routing, Analytics, Auth) et en utilisant des Value Objects pour les concepts clés (StationId, Distance, AnalyticCode), j'ai voulu montrer que je ne me contente pas de "faire fonctionner" le code, mais que je réfléchis à sa maintenabilité sur le long terme.
+### Authentification complete
 
-Cette architecture permet à un nouveau développeur de comprendre rapidement où se trouve chaque responsabilité et facilite l'ajout de nouvelles fonctionnalités sans risquer de casser l'existant.
+J'ai cree un systeme d'inscription/connexion complet avec JWT, hashage bcrypt et persistance en base. Plus realiste qu'un utilisateur hardcode.
 
-### L'algorithme de Dijkstra
-
-Pour le calcul des trajets, j'ai implémenté l'algorithme de Dijkstra plutôt qu'une simple recherche en largeur (BFS). Même si BFS aurait suffi pour trouver un chemin, Dijkstra garantit de trouver le plus court chemin en termes de distance kilométrique, ce qui est essentiel dans un contexte ferroviaire où les coûts et les temps de trajet dépendent des distances.
-
-J'ai utilisé une `SplPriorityQueue` de PHP pour optimiser les performances. L'implémentation est accompagnée de tests unitaires couvrant tous les cas : chemins directs, chemins via plusieurs stations, cas d'erreur, réseaux complexes avec plusieurs routes possibles.
-
-### La gestion de l'authentification
-
-J'ai implémenté un système d'authentification complet avec inscription et connexion des utilisateurs, alors que ce n'était pas explicitement demandé. Mon raisonnement : dans un contexte réel, on ne déploierait jamais une API avec un simple utilisateur en mémoire. J'ai donc créé une entité User avec Doctrine, un système d'inscription avec validation, et la persistance des utilisateurs en base de données.
-
-Cela m'a également permis de démontrer ma compréhension du système de sécurité de Symfony et de l'intégration JWT.
-
----
-
-## 🔍 Les défis rencontrés et comment je les ai résolus
-
-### Configuration des tests avec Doctrine
-
-L'un des défis a été de faire cohabiter les tests unitaires (qui n'ont pas besoin de base de données) avec les tests fonctionnels (qui en ont besoin). J'ai résolu ce problème en configurant SQLite en mémoire pour l'environnement de test, ce qui permet des tests rapides tout en validant les interactions avec la base de données.
-
-### Le réseau ferroviaire bidirectionnel
-
-Les données fournies dans `distances.json` représentent des segments unidirectionnels, mais un train peut évidemment circuler dans les deux sens. J'ai donc implémenté le `JsonNetworkLoader` pour créer automatiquement les connexions bidirectionnelles, tout en m'assurant que les distances restent cohérentes dans les deux directions.
-
-### L'interface utilisateur MOB
-
-J'ai voulu créer une interface qui ressemble à ce qu'on pourrait trouver sur le site officiel du MOB. J'ai donc intégré le logo officiel et adopté une charte graphique sobre avec le bleu MOB (#001f78) et le rose accent (#e6007e). L'objectif était de montrer que je peux m'adapter à une identité visuelle existante.
-
----
-
-## 📊 Ce que j'ai appris
-
-Ce défi m'a permis d'approfondir plusieurs aspects :
-
-- **PHPStan au niveau 8** : C'est la première fois que je configure PHPStan au niveau maximum. Cela m'a forcé à être rigoureux sur le typage et à anticiper les cas null.
-
-- **GitHub Actions** : J'avais l'habitude de GitLab CI pendant mon alternance, mais j'ai découvert que GitHub Actions offre une syntaxe différente mais tout aussi puissante. La migration vers TeamCity serait relativement simple car la logique reste la même.
-
-- **Trivy pour le scan de conteneurs** : C'est un outil que je ne connaissais pas et que j'intégrerai désormais systématiquement dans mes pipelines.
-
----
-
-## 🎯 Si j'avais plus de temps
-
-Voici ce que j'ajouterais pour aller plus loin :
-
-1. **Swagger UI** : Un endpoint `/api/docs` pour visualiser et tester l'API de manière interactive.
-
-2. **Tests E2E avec Cypress** : Pour valider les parcours utilisateurs complets du frontend.
-
-3. **Carte interactive** : Visualiser le réseau MOB sur une carte avec les trajets calculés.
-
-4. **Historique des trajets** : Permettre aux utilisateurs de consulter leurs recherches passées.
+> Pour plus de details sur mes choix, voir [DECISION_LOG.md](./DECISION_LOG.md) et [HYPOTHESES.md](./HYPOTHESES.md)
 
 ---
 
@@ -416,6 +366,11 @@ docker compose exec frontend npm run lint
 
 ## Documentation
 
-- [ARCHITECTURE.md](./ARCHITECTURE.md) - Choix techniques et architecture
-- [CHANGELOG.md](./CHANGELOG.md) - Historique des modifications
-- [openapi.yml](./openapi.yml) - Spécification API OpenAPI 3.1
+| Document | Description |
+|----------|-------------|
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | Architecture technique et choix de conception |
+| [DECISION_LOG.md](./DECISION_LOG.md) | Journal de mes décisions tout au long du projet |
+| [HYPOTHESES.md](./HYPOTHESES.md) | Hypothèses métier documentées |
+| [AI_WORKFLOW.md](./AI_WORKFLOW.md) | Mon approche du développement assisté par IA |
+| [CHANGELOG.md](./CHANGELOG.md) | Historique des modifications |
+| [openapi.yml](./openapi.yml) | Spécification API OpenAPI 3.1 |
