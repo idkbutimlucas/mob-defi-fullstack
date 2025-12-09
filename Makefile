@@ -67,7 +67,7 @@ storybook:
 # Setup targets
 # ==============================================================================
 
-## env: Create .env file from example
+## env: Create .env files from examples
 env:
 	@if [ ! -f .env ]; then \
 		echo "$(GREEN)Creating .env file...$(NC)"; \
@@ -75,6 +75,10 @@ env:
 		echo "$(YELLOW)Edit .env to customize your configuration$(NC)"; \
 	else \
 		echo "$(YELLOW).env already exists, skipping$(NC)"; \
+	fi
+	@if [ ! -f backend/.env ]; then \
+		echo "$(GREEN)Creating backend/.env file...$(NC)"; \
+		cp backend/.env.example backend/.env; \
 	fi
 
 ## ssl: Generate self-signed SSL certificates
