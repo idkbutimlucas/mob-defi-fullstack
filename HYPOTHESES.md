@@ -1,160 +1,96 @@
 # Hypotheses metier
 
-> L'enonce du defi indique : *"tu es libre de faire des hypotheses raisonnables et de les documenter"*. Ce document liste les hypotheses que j'ai faites pour combler les zones d'incertitude du cahier des charges.
+L'enonce du defi indique : *"tu es libre de faire des hypotheses raisonnables et de les documenter"*. Ce document liste les hypotheses que j'ai faites pour combler les zones d'incertitude du cahier des charges.
 
 ---
 
-## Hypotheses sur le reseau ferroviaire
+## Sur le reseau ferroviaire
 
-### H1 — Les trajets sont bidirectionnels
+### Les trajets sont bidirectionnels
 
-| Aspect | Detail |
-|--------|--------|
-| **Constat** | Le fichier `distances.json` contient des segments directionnels (ex: "Montreux -> Les Avants") |
-| **Question** | Un train peut-il circuler dans les deux sens ? |
-| **Hypothese** | Oui. La distance A->B est identique a B->A |
-| **Implementation** | `JsonNetworkLoader` cree automatiquement les connexions inverses |
-| **Justification** | Comportement standard d'un reseau ferroviaire. Les voies a sens unique existent mais seraient explicitement marquees |
+Le fichier `distances.json` contient des segments orientes (ex: "Montreux vers Les Avants"). Je pars du principe qu'un train peut circuler dans les deux sens sur une meme voie et que la distance est identique dans les deux directions.
 
-### H2 — Le reseau est connexe
+**Implementation** : Le `JsonNetworkLoader` cree automatiquement les connexions inverses lors du chargement du reseau.
 
-| Aspect | Detail |
-|--------|--------|
-| **Constat** | Les donnees ne garantissent pas que toutes les stations sont reliees |
-| **Question** | Peut-on toujours trouver un chemin entre deux stations ? |
-| **Hypothese** | Non, certaines paires peuvent ne pas etre connectees |
-| **Implementation** | L'algorithme retourne une erreur explicite si aucun chemin n'existe |
-| **Justification** | Un reseau reel peut avoir des branches isolees (lignes touristiques, voies de service) |
+### Le reseau n'est pas forcement connexe
 
-### H3 — Les distances sont en kilometres
+Les donnees ne garantissent pas que toutes les stations sont reliees entre elles. Certaines paires de stations peuvent ne pas avoir de chemin.
 
-| Aspect | Detail |
-|--------|--------|
-| **Constat** | L'unite n'est pas explicitement specifiee dans les donnees |
-| **Question** | Quelle est l'unite des distances ? |
-| **Hypothese** | Kilometres (km), avec precision au dixieme |
-| **Implementation** | Les distances sont stockees en float, affichees avec 1 decimale |
-| **Justification** | Unite standard pour les reseaux ferroviaires europeens |
+**Implementation** : L'algorithme de Dijkstra retourne une exception `NoRouteFoundException` si aucun chemin n'existe entre deux stations.
+
+### Les distances sont en kilometres
+
+L'unite n'est pas explicitement specifiee dans les donnees. J'ai suppose que les distances sont en kilometres avec une precision au dixieme.
 
 ---
 
-## Hypotheses sur les codes analytiques
+## Sur les codes analytiques
 
-### H4 — Les codes sont libres
+### Les codes sont des chaines libres
 
-| Aspect | Detail |
-|--------|--------|
-| **Constat** | L'enonce mentionne des exemples (fret, passager, maintenance) sans liste exhaustive |
-| **Question** | Y a-t-il une liste fermee de codes valides ? |
-| **Hypothese** | Non, les codes sont des chaines libres |
-| **Implementation** | Validation sur format (alphanumerique, 1-50 caracteres) sans liste blanche |
-| **Justification** | Flexibilite pour les evolutions metier. Dans un systeme reel, la liste serait dans un referentiel externe |
+L'enonce mentionne des exemples de codes (fret, passager, maintenance) mais ne fournit pas de liste exhaustive. J'ai suppose que les codes analytiques sont des chaines libres, validees uniquement sur leur format.
 
-### H5 — Les codes sont case-insensitive pour les stats
+**Implementation** : Validation alphanumerique, 1 a 50 caracteres, tirets autorises.
 
-| Aspect | Detail |
-|--------|--------|
-| **Constat** | Rien ne precise si "PASSAGER" et "passager" sont differents |
-| **Question** | Comment gerer la casse dans les agregations ? |
-| **Hypothese** | Les codes sont normalises en minuscules pour l'agregation |
-| **Implementation** | `strtolower()` applique avant stockage et agregation |
-| **Justification** | Evite les doublons accidentels dans les statistiques |
+### La casse est normalisee
+
+Pour eviter les doublons dans les statistiques ("PASSAGER" vs "passager"), les codes sont normalises en majuscules avant stockage.
 
 ---
 
-## Hypotheses sur les utilisateurs
+## Sur les utilisateurs
 
-### H6 — Inscription libre
+### Inscription libre
 
-| Aspect | Detail |
-|--------|--------|
-| **Constat** | L'enonce mentionne "authentification" sans preciser le workflow |
-| **Question** | Comment les utilisateurs obtiennent-ils un compte ? |
-| **Hypothese** | Inscription libre via endpoint `/register` |
-| **Implementation** | Endpoint POST /register avec email/password |
-| **Justification** | Plus realiste qu'un user hardcode. Permet de demontrer un flow complet |
+L'enonce mentionne "authentification" sans preciser le workflow d'obtention d'un compte. J'ai cree un systeme d'inscription libre via l'endpoint `/api/v1/register`.
 
-### H7 — Pas de roles/permissions
+### Pas de roles differencies
 
-| Aspect | Detail |
-|--------|--------|
-| **Constat** | Aucune mention de niveaux d'acces differents |
-| **Question** | Y a-t-il des admins, des utilisateurs limites, etc. ? |
-| **Hypothese** | Non, tous les utilisateurs authentifies ont les memes droits |
-| **Implementation** | Un seul role `ROLE_USER` |
-| **Justification** | KISS (Keep It Simple). Ajout de roles trivial si besoin |
+Aucune mention de niveaux d'acces differents (admin, utilisateur limite). Tous les utilisateurs authentifies ont les memes droits avec un role unique `ROLE_USER`.
 
 ---
 
-## Hypotheses sur les statistiques
+## Sur les statistiques
 
-### H8 — Statistiques globales
+### Statistiques globales
 
-| Aspect | Detail |
-|--------|--------|
-| **Constat** | L'endpoint de stats ne precise pas la portee |
-| **Question** | Les stats sont-elles par utilisateur ou globales ? |
-| **Hypothese** | Globales (tous les trajets de tous les utilisateurs) |
-| **Implementation** | Agregation sur l'ensemble de la table `routes` |
-| **Justification** | Plus utile pour une analyse du trafic. Filtre par user facile a ajouter |
+L'endpoint de statistiques agregees ne precise pas la portee des donnees. J'ai choisi d'agreger tous les trajets de tous les utilisateurs plutot que de filtrer par utilisateur.
 
-### H9 — Persistance des trajets
+**Justification** : Dans un contexte de gestion du trafic ferroviaire, les statistiques globales sont plus utiles pour l'analyse.
 
-| Aspect | Detail |
-|--------|--------|
-| **Constat** | L'enonce dit "tu peux choisir de persister les saisies" |
-| **Question** | Faut-il sauvegarder chaque calcul de trajet ? |
-| **Hypothese** | Oui, pour alimenter les statistiques |
-| **Implementation** | Chaque POST /routes cree une entree en base |
-| **Justification** | Necessaire pour le bonus "statistiques agregees" |
+### Persistance des trajets
+
+L'enonce indique "tu peux choisir de persister les saisies". J'ai choisi de les persister pour alimenter l'endpoint de statistiques (point bonus).
 
 ---
 
-## Hypotheses sur l'API
+## Sur l'API
 
-### H10 — Pas de pagination
+### Versioning
 
-| Aspect | Detail |
-|--------|--------|
-| **Constat** | L'OpenAPI fournie ne mentionne pas de pagination |
-| **Question** | Faut-il paginer les listes (stations, stats) ? |
-| **Hypothese** | Non pour ce defi (dataset limite) |
-| **Implementation** | Retour de toutes les donnees en une requete |
-| **Justification** | Le reseau MOB a ~50 stations. Pagination utile a partir de centaines d'items |
+J'ai prefixe toutes les routes avec `/api/v1/` pour permettre des evolutions futures sans casser les clients existants.
 
-### H11 — Versioning d'API
+### Enrichissement des trajets
 
-| Aspect | Detail |
-|--------|--------|
-| **Constat** | Non mentionne dans l'enonce |
-| **Question** | Faut-il versionner l'API ? |
-| **Hypothese** | Oui, prefixe `/api/v1/` |
-| **Implementation** | Toutes les routes sous `/api/v1/` |
-| **Justification** | Best practice permettant des evolutions sans casser les clients |
+Le besoin demande de "calculer une distance entre deux stations". J'ai enrichi la reponse pour inclure aussi le detail du parcours (stations traversees et distance de chaque segment).
 
-### H12 — Enrichissement du detail des trajets
+**Justification** : Un utilisateur veut generalement savoir par ou il passe, pas seulement la distance finale. C'est une extension du format, pas une rupture.
 
-| Aspect | Detail |
-|--------|--------|
-| **Constat** | Le besoin demande "calculer une distance entre deux stations" |
-| **Question** | Faut-il retourner seulement la distance totale ou aussi le detail du parcours ? |
-| **Hypothese** | Le detail (stations traversees + distance de chaque segment) apporte plus de valeur |
-| **Implementation** | La reponse inclut `path` avec chaque station et `distanceFromPrevious` |
-| **Justification** | Un utilisateur veut generalement savoir par ou il passe, pas juste la distance finale. C'est une extension du format, pas une rupture |
+### Endpoint stations public
+
+L'endpoint `/api/v1/stations` est public (pas d'authentification requise) pour que le formulaire du frontend puisse charger la liste des stations sans connexion prealable.
 
 ---
 
-## Validation des hypotheses
+## Impact si ces hypotheses sont incorrectes
 
-Si certaines de ces hypotheses s'averent incorrectes, voici l'impact :
-
-| Hypothese | Impact si incorrecte | Effort de correction |
-|-----------|---------------------|---------------------|
-| H1 (bidirectionnel) | Modifier le loader | Faible |
-| H4 (codes libres) | Ajouter une table de reference | Moyen |
-| H6 (inscription libre) | Ajouter validation admin | Moyen |
-| H8 (stats globales) | Ajouter filtre user_id | Faible |
-| H12 (detail trajets) | Revenir au format minimal | Faible |
+| Hypothese | Impact | Effort de correction |
+|-----------|--------|---------------------|
+| Bidirectionnel | Modifier le loader pour respecter le sens | Faible |
+| Codes libres | Ajouter une table de reference | Moyen |
+| Inscription libre | Ajouter validation admin | Moyen |
+| Stats globales | Ajouter filtre par user_id | Faible |
+| Detail trajets | Revenir au format minimal | Faible |
 
 ---
 
