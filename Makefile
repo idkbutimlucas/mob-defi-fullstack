@@ -34,6 +34,8 @@ init: env ssl jwt
 	@echo "$(GREEN)Creating database schema...$(NC)"
 	docker compose exec -T backend php bin/console doctrine:schema:create --no-interaction || \
 		docker compose exec -T backend php bin/console doctrine:schema:update --force --no-interaction
+	@echo "$(GREEN)Starting Storybook...$(NC)"
+	docker compose --profile dev up -d storybook
 	@echo ""
 	@echo "$(GREEN)============================================$(NC)"
 	@echo "$(GREEN) Setup complete!$(NC)"
@@ -41,7 +43,7 @@ init: env ssl jwt
 	@echo ""
 	@echo "  Frontend:  https://localhost"
 	@echo "  API:       https://localhost/api/v1"
-	@echo "  Storybook: make storybook (then http://localhost:6006)"
+	@echo "  Storybook: http://localhost:6006"
 	@echo ""
 
 ## start: Start all services
