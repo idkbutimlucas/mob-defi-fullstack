@@ -283,22 +283,27 @@ make help       # Voir toutes les commandes
 <summary>Cliquer pour voir les commandes manuelles</summary>
 
 ```powershell
-# 1. Créer le fichier .env
+# 1. Creer les fichiers .env
 copy .env.example .env
+copy backend\.env.example backend\.env
 
-# 2. Générer les certificats SSL
+# 2. Generer les certificats SSL
 mkdir nginx\ssl
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout nginx\ssl\key.pem -out nginx\ssl\cert.pem -subj "/CN=localhost"
 
-# 3. Générer les clés JWT
+# 3. Generer les cles JWT
 mkdir backend\config\jwt
 openssl genpkey -algorithm RSA -out backend\config\jwt\private.pem -pkeyopt rsa_keygen_bits:4096
 openssl rsa -pubout -in backend\config\jwt\private.pem -out backend\config\jwt\public.pem
 
-# 4. Démarrer les services
-docker compose up -d
+# 4. Demarrer les services
+docker compose up -d --build
 
-# 5. Créer le schéma de base de données
+# 5. Installer les dependances
+docker compose exec backend composer install
+docker compose exec frontend npm install
+
+# 6. Creer le schema de base de donnees
 docker compose exec backend php bin/console doctrine:schema:create
 ```
 
