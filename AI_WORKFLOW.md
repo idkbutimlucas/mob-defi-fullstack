@@ -103,4 +103,4 @@ C'est une competence que je pense importante pour l'avenir du developpement.
 
 ---
 
-*Lucas - Decembre 2024*
+*Lucas - Decembre 2025*

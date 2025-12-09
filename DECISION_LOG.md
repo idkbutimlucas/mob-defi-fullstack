@@ -256,7 +256,7 @@ J'ai ameliore les tests pour atteindre :
 
 ### Reflexions personnelles
 
-- Je suis plus efficace quand je prends le temps de reflechir avant de coder
+- Je suis plus efficace quand je prends le temps de reflechir avant de coder (J'aime ecrire sur un bloc-notes les architectures ainsi que des notes pertinentes)
 - Le TDD m'a aide a bien definir les interfaces
 - Documenter mes choix m'oblige a les justifier
 
@@ -269,7 +269,8 @@ J'ai ameliore les tests pour atteindre :
 3. **Carte interactive** : Visualiser le reseau MOB sur une carte
 4. **Cache Redis** : Optimiser les calculs de trajets frequents
 5. **Internationalisation** : Support FR/DE/EN
+6. **Gestion de Profil Utilisateur** : Personnalisation et gestion du profil utilisateur
 
 ---
 
-*Lucas - Decembre 2024*
+*Lucas - Decembre 2025*
