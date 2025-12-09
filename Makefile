@@ -27,6 +27,10 @@ init: env ssl jwt
 	docker compose up -d --build
 	@echo "$(YELLOW)Waiting for database to be ready...$(NC)"
 	@sleep 5
+	@echo "$(GREEN)Installing backend dependencies...$(NC)"
+	docker compose exec -T backend composer install --no-interaction
+	@echo "$(GREEN)Installing frontend dependencies...$(NC)"
+	docker compose exec -T frontend npm install
 	@echo "$(GREEN)Creating database schema...$(NC)"
 	docker compose exec -T backend php bin/console doctrine:schema:create --no-interaction || \
 		docker compose exec -T backend php bin/console doctrine:schema:update --force --no-interaction
