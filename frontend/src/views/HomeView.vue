@@ -1,6 +1,11 @@
 <script setup lang="ts">
   import { ref, onMounted, computed } from 'vue'
+  import { useRouter } from 'vue-router'
   import { getStations, calculateRoute, type Station, type RouteResponse } from '@/api/client'
+  import { useAuthStore } from '@/stores/auth'
+
+  const router = useRouter()
+  const authStore = useAuthStore()
 
   const stations = ref<Station[]>([])
   const loading = ref(false)
@@ -51,6 +56,12 @@
   async function submitForm() {
     if (!isFormValid.value) {
       error.value = 'Veuillez remplir tous les champs correctement'
+      return
+    }
+
+    // Redirect to login if not authenticated
+    if (!authStore.isAuthenticated) {
+      router.push({ name: 'login', query: { redirect: '/' } })
       return
     }
 

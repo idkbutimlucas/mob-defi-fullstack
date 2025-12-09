@@ -8,6 +8,14 @@ vi.mock('@/api/client', () => ({
   calculateRoute: vi.fn(),
 }))
 
+// Mock authenticated user for all tests
+vi.mock('@/stores/auth', () => ({
+  useAuthStore: vi.fn(() => ({
+    isAuthenticated: true,
+    user: { id: '1', username: 'test_user', email: 'test@test.com', roles: ['ROLE_USER'] },
+  })),
+}))
+
 describe('HomeView', () => {
   const mockStations = [
     { id: 'MX', name: 'Montreux' },

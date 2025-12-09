@@ -4,14 +4,6 @@ import { createPinia, setActivePinia } from 'pinia'
 import LoginView from '@/views/LoginView.vue'
 import { useAuthStore } from '@/stores/auth'
 
-const mockPush = vi.fn()
-
-vi.mock('vue-router', () => ({
-  useRouter: () => ({
-    push: mockPush,
-  }),
-}))
-
 describe('LoginView', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -64,6 +56,8 @@ describe('LoginView', () => {
   it('should redirect to home on successful login', async () => {
     const wrapper = mount(LoginView)
     const store = useAuthStore()
+    const router = wrapper.vm.$router
+    const pushSpy = vi.spyOn(router, 'push')
 
     store.login = vi.fn().mockResolvedValue(undefined)
     ;(wrapper.vm as any).username = 'testuser'
@@ -73,7 +67,7 @@ describe('LoginView', () => {
     await wrapper.find('form').trigger('submit')
     await flushPromises()
 
-    expect(mockPush).toHaveBeenCalledWith('/')
+    expect(pushSpy).toHaveBeenCalledWith('/')
   })
 
   it('should display error message from store', async () => {
@@ -119,6 +113,8 @@ describe('LoginView', () => {
   it('should not redirect on login failure', async () => {
     const wrapper = mount(LoginView)
     const store = useAuthStore()
+    const router = wrapper.vm.$router
+    const pushSpy = vi.spyOn(router, 'push')
 
     store.login = vi.fn().mockRejectedValue(new Error('Login failed'))
     ;(wrapper.vm as any).username = 'testuser'
@@ -128,6 +124,6 @@ describe('LoginView', () => {
     await wrapper.find('form').trigger('submit')
     await flushPromises()
 
-    expect(mockPush).not.toHaveBeenCalled()
+    expect(pushSpy).not.toHaveBeenCalled()
   })
 })
