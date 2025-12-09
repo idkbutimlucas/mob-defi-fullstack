@@ -416,6 +416,11 @@ docker compose exec frontend npm run lint
 
 ## Documentation
 
-- [ARCHITECTURE.md](./ARCHITECTURE.md) - Choix techniques et architecture
-- [CHANGELOG.md](./CHANGELOG.md) - Historique des modifications
-- [openapi.yml](./openapi.yml) - Spécification API OpenAPI 3.1
+| Document | Description |
+|----------|-------------|
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | Architecture technique et choix de conception |
+| [DECISION_LOG.md](./DECISION_LOG.md) | Journal de mes décisions tout au long du projet |
+| [HYPOTHESES.md](./HYPOTHESES.md) | Hypothèses métier documentées |
+| [AI_WORKFLOW.md](./AI_WORKFLOW.md) | Mon approche du développement assisté par IA |
+| [CHANGELOG.md](./CHANGELOG.md) | Historique des modifications |
+| [openapi.yml](./openapi.yml) | Spécification API OpenAPI 3.1 |
